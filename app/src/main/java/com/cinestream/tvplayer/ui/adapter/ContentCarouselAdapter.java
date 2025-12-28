@@ -68,6 +68,7 @@ public class ContentCarouselAdapter extends RecyclerView.Adapter<ContentCarousel
             contentImage = itemView.findViewById(R.id.contentImage);
             focusOverlay = itemView.findViewById(R.id.focusOverlay);
 
+
             itemView.setOnFocusChangeListener((v, hasFocus) -> {
                 if (onItemClickListener != null && getAdapterPosition() != RecyclerView.NO_POSITION) {
                     onItemClickListener.onFocusChanged(contentList.get(getAdapterPosition()), getAdapterPosition(), hasFocus);
@@ -92,7 +93,7 @@ public class ContentCarouselAdapter extends RecyclerView.Adapter<ContentCarousel
         }
 
         private void updateFocusState(boolean hasFocus) {
-            if (hasFocus || getAdapterPosition() == selectedPosition) {
+            if (hasFocus) {
                 focusOverlay.setVisibility(View.VISIBLE);
                 itemView.animate()
                         .scaleX(1.05f)

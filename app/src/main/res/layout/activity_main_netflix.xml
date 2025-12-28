@@ -147,21 +147,21 @@
 
     </LinearLayout>
 
-    <!-- Guideline at 65% from top (divides hero and carousel) -->
+    <!-- Guideline at 50% from top (divides hero and categories) -->
     <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline65"
+        android:id="@+id/guideline50"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.65" />
+        app:layout_constraintGuide_percent="0.50" />
 
-    <!-- Hero Content (Top 65%) -->
+    <!-- Hero Content (Top 50%) -->
     <ScrollView
         android:id="@+id/heroContent"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
-        app:layout_constraintBottom_toTopOf="@id/guideline65"
+        app:layout_constraintBottom_toTopOf="@id/guideline50"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/navigationSidebar"
         app:layout_constraintTop_toTopOf="parent">
@@ -208,14 +208,14 @@
                 android:maxLines="2"
                 android:text="Movie Title"
                 android:textColor="@color/white"
-                android:textSize="48sp"
+                android:textSize="42sp"
                 android:textStyle="bold" />
 
             <!-- Metadata Row -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
+                android:layout_marginBottom="16dp"
                 android:gravity="start"
                 android:orientation="horizontal">
 
@@ -265,12 +265,12 @@
                 android:id="@+id/synopsisText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="32dp"
+                android:layout_marginBottom="24dp"
                 android:lineSpacingExtra="4dp"
                 android:maxLines="3"
-                android:text="Movie description goes here. This will contain information about the plot, characters, and other relevant details about the movie."
+                android:text="Movie description goes here."
                 android:textColor="@color/gray_light"
-                android:textSize="18sp" />
+                android:textSize="16sp" />
 
             <!-- Action Buttons -->
             <LinearLayout
@@ -280,27 +280,27 @@
 
                 <Button
                     android:id="@+id/playButton"
-                    android:layout_width="160dp"
-                    android:layout_height="48dp"
+                    android:layout_width="140dp"
+                    android:layout_height="44dp"
                     android:layout_marginEnd="16dp"
                     android:focusable="true"
                     android:focusableInTouchMode="true"
                     android:background="@drawable/button_selector"
                     android:text="Play"
                     android:textColor="@android:color/black"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/moreInfoButton"
-                    android:layout_width="160dp"
-                    android:layout_height="48dp"
+                    android:layout_width="140dp"
+                    android:layout_height="44dp"
                     android:focusable="true"
                     android:focusableInTouchMode="true"
                     android:background="@drawable/button_more_info_selector"
                     android:text="More Info"
                     android:textColor="@color/white"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
             </LinearLayout>
@@ -309,42 +309,18 @@
 
     </ScrollView>
 
-    <!-- Bottom Carousel (Bottom 35%) -->
-    <LinearLayout
-        android:id="@+id/bottomCarousel"
+    <!-- Categories Section (Bottom 50%) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/categoriesRecyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:orientation="vertical"
-        android:paddingStart="48dp"
-        android:paddingEnd="48dp"
-        android:paddingBottom="32dp"
+        android:clipToPadding="false"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/navigationSidebar"
-        app:layout_constraintTop_toBottomOf="@id/guideline65">
-
-        <!-- Category Title -->
-        <TextView
-            android:id="@+id/categoryTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:text="Featured Movies"
-            android:textColor="@color/white"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
-        <!-- Content Carousel -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/contentRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:orientation="horizontal"
-            android:paddingStart="0dp"
-            android:paddingEnd="0dp" />
-
-    </LinearLayout>
+        app:layout_constraintTop_toBottomOf="@id/guideline50" />
 
     <!-- Loading Overlay -->
     <RelativeLayout

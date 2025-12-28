@@ -22,11 +22,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.cinestream.tvplayer.R;
 import com.cinestream.tvplayer.api.TMDBApiClient;
+import com.cinestream.tvplayer.data.model.CategorySection;
 import com.cinestream.tvplayer.data.model.MediaItems;
 import com.cinestream.tvplayer.data.repository.MediaRepository;
 import com.cinestream.tvplayer.data.repository.MediaRepositoryCombined;
 import com.cinestream.tvplayer.data.repository.MediaRepositoryVideasy;
-import com.cinestream.tvplayer.ui.adapter.ContentCarouselAdapter;
+import com.cinestream.tvplayer.ui.adapter.CategoryAdapter;
+import com.cinestream.tvplayer.ui.adapter.VerticalSpaceItemDecoration;
 import com.cinestream.tvplayer.ui.details.DetailsActivity;
 import com.cinestream.tvplayer.ui.player.PlayerActivity;
 import com.cinestream.tvplayer.ui.search.SearchActivity;
@@ -56,8 +58,7 @@ public class NetflixMainActivity extends AppCompatActivity {
     private TextView synopsisText;
     private Button playButton;
     private Button moreInfoButton;
-    private TextView categoryTitle;
-    private RecyclerView contentRecyclerView;
+    private RecyclerView categoriesRecyclerView;
     private RelativeLayout loadingOverlay;
     private ProgressBar loadingProgressBar;
 
@@ -65,32 +66,16 @@ public class NetflixMainActivity extends AppCompatActivity {
     private LinearLayout navigationSidebar;
 
     // Data
-    private List<MediaItems> allContent = new ArrayList<>();
-    private ContentCarouselAdapter carouselAdapter;
+    private List<CategorySection> categories = new ArrayList<>();
+    private CategoryAdapter categoryAdapter;
     private MediaRepository mediaRepository;
     private MediaRepositoryVideasy apiRepository;
     private MediaRepositoryCombined combinedRepository;
-    private int currentSelectedPosition = 0;
+    private MediaItems currentSelectedItem;
 
     // TMDB Loading states
-    private boolean isLoadingTMDB = false;
     private int loadedTMDBCategories = 0;
     private static final int TOTAL_TMDB_CATEGORIES = 4;
-
-    // Categories - Updated with TMDB content
-    private static final String[] CATEGORIES = {
-            "Featured Movies",
-            "Action & Adventure",
-            "Comedy",
-            "Drama",
-            "Documentaries",
-            "Format Demos",
-            "🎆 Live API Content",
-            "🎬 Popular Movies",
-            "📺 Popular TV Shows",
-            "⭐ Top Rated Movies",
-            "🔥 Trending Now"
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,12 +116,11 @@ public class NetflixMainActivity extends AppCompatActivity {
         // Navigation
         navigationSidebar = findViewById(R.id.navigationSidebar);
 
-        // Carousel
-        categoryTitle = findViewById(R.id.categoryTitle);
-        contentRecyclerView = findViewById(R.id.contentRecyclerView);
-
-        // Setup RecyclerView
-        contentRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        // Categories RecyclerView
+        categoriesRecyclerView = findViewById(R.id.categoriesRecyclerView);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        categoriesRecyclerView.setLayoutManager(layoutManager);
+        categoriesRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(16));
 
         // Loading
         loadingOverlay = findViewById(R.id.loadingOverlay);
@@ -144,15 +128,12 @@ public class NetflixMainActivity extends AppCompatActivity {
     }
 
     private void setupNavigationFocus() {
-        // Set initial focus to home icon
         homeIcon.requestFocus();
         homeIcon.setSelected(true);
 
-        // Setup focus change listeners for navigation icons
         View.OnFocusChangeListener navFocusListener = (v, hasFocus) -> {
             if (hasFocus) {
                 v.setSelected(true);
-                // Add scale animation
                 v.animate().scaleX(1.1f).scaleY(1.1f).setDuration(200).start();
             } else {
                 v.setSelected(false);
@@ -170,55 +151,45 @@ public class NetflixMainActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        // Play button
         playButton.setOnClickListener(v -> {
-            if (!allContent.isEmpty() && currentSelectedPosition < allContent.size()) {
-                MediaItems currentItem = allContent.get(currentSelectedPosition);
-                if (currentItem.isFromAPI() || currentItem.isFromTMDB()) {
-                    fetchAndPlay(currentItem);
+            if (currentSelectedItem != null) {
+                if (currentSelectedItem.isFromAPI() || currentSelectedItem.isFromTMDB()) {
+                    fetchAndPlay(currentSelectedItem);
                 } else {
-                    launchPlayer(currentItem);
+                    launchPlayer(currentSelectedItem);
                 }
             }
         });
 
-        // More info button
         moreInfoButton.setOnClickListener(v -> {
-            if (!allContent.isEmpty() && currentSelectedPosition < allContent.size()) {
-                MediaItems currentItem = allContent.get(currentSelectedPosition);
-                launchDetails(currentItem);
+            if (currentSelectedItem != null) {
+                launchDetails(currentSelectedItem);
             }
         });
 
-        // Navigation icon clicks
         searchIcon.setOnClickListener(v -> {
             Intent intent = new Intent(NetflixMainActivity.this, SearchActivity.class);
             startActivity(intent);
         });
 
         homeIcon.setOnClickListener(v -> {
-            // Already on home - could refresh content
             loadContent();
             Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show();
         });
 
         moviesIcon.setOnClickListener(v -> {
-            // Filter to show only movies
             Toast.makeText(this, "Movies - Coming Soon", Toast.LENGTH_SHORT).show();
         });
 
         tvIcon.setOnClickListener(v -> {
-            // Filter to show only TV shows
             Toast.makeText(this, "TV Shows - Coming Soon", Toast.LENGTH_SHORT).show();
         });
 
         apiIcon.setOnClickListener(v -> {
-            // Show API content
             Toast.makeText(this, "API Content", Toast.LENGTH_SHORT).show();
         });
 
         myListIcon.setOnClickListener(v -> {
-            // Show user's list
             Toast.makeText(this, "My List - Coming Soon", Toast.LENGTH_SHORT).show();
         });
 
@@ -230,23 +201,20 @@ public class NetflixMainActivity extends AppCompatActivity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // Handle D-pad navigation for better TV experience
         switch (keyCode) {
             case KeyEvent.KEYCODE_DPAD_LEFT:
-                // If we're in the content area, move to navigation sidebar
-                if (contentRecyclerView.hasFocus()) {
+                if (categoriesRecyclerView.hasFocus()) {
                     homeIcon.requestFocus();
                     return true;
                 }
                 break;
             case KeyEvent.KEYCODE_DPAD_RIGHT:
-                // If we're in navigation, move to content
                 if (searchIcon.hasFocus() || homeIcon.hasFocus() ||
                         moviesIcon.hasFocus() || tvIcon.hasFocus() ||
                         apiIcon.hasFocus() || myListIcon.hasFocus() ||
                         settingsIcon.hasFocus()) {
-                    if (!allContent.isEmpty()) {
-                        contentRecyclerView.requestFocus();
+                    if (!categories.isEmpty()) {
+                        categoriesRecyclerView.requestFocus();
                     }
                     return true;
                 }
@@ -257,53 +225,62 @@ public class NetflixMainActivity extends AppCompatActivity {
 
     private void loadContent() {
         loadingOverlay.setVisibility(View.VISIBLE);
-        isLoadingTMDB = true;
         loadedTMDBCategories = 0;
 
-        // Combine all content from different categories
-        allContent.clear();
-        allContent.addAll(apiRepository.getAPISampleContent());
+        categories.clear();
 
-        // Load TMDB content in the background
-        loadTMDBContent();
+        // Add local categories
+        categories.add(new CategorySection("Featured Movies", mediaRepository.getFeaturedMovies()));
+        categories.add(new CategorySection("Action & Adventure", mediaRepository.getActionMovies()));
+        categories.add(new CategorySection("Comedy", mediaRepository.getComedyMovies()));
+        categories.add(new CategorySection("Drama", mediaRepository.getDramaMovies()));
+        categories.add(new CategorySection("Documentaries", mediaRepository.getDocumentaries()));
+        categories.add(new CategorySection("Format Demos", mediaRepository.getFormatDemos()));
+        categories.add(new CategorySection("🎆 Live API Content", apiRepository.getAPISampleContent()));
 
-        // Setup adapter with initial content
-        carouselAdapter = new ContentCarouselAdapter(allContent);
-        contentRecyclerView.setAdapter(carouselAdapter);
+        // Setup adapter
+        categoryAdapter = new CategoryAdapter(categories);
+        categoriesRecyclerView.setAdapter(categoryAdapter);
 
-        carouselAdapter.setOnItemClickListener(new ContentCarouselAdapter.OnItemClickListener() {
+        categoryAdapter.setOnItemClickListener(new CategoryAdapter.OnItemClickListener() {
             @Override
-            public void onItemClick(MediaItems mediaItems, int position) {
-                currentSelectedPosition = position;
-                updateHeroContent(mediaItems, position);
+            public void onItemClick(MediaItems mediaItems, int categoryPosition, int itemPosition) {
+                currentSelectedItem = mediaItems;
+                updateHeroContent(mediaItems, categoryPosition);
+                launchDetails(currentSelectedItem);
             }
 
             @Override
-            public void onFocusChanged(MediaItems mediaItems, int position, boolean hasFocus) {
+            public void onItemFocusChanged(MediaItems mediaItems, int categoryPosition, int itemPosition, boolean hasFocus) {
                 if (hasFocus) {
-                    currentSelectedPosition = position;
-                    updateHeroContent(mediaItems, position);
+                    currentSelectedItem = mediaItems;
+                    updateHeroContent(mediaItems, categoryPosition);
                 }
             }
         });
 
-        // Set initial content if available
-        if (!allContent.isEmpty()) {
-            updateHeroContent(allContent.get(0), 0);
-            carouselAdapter.setSelectedPosition(0);
+        // Load TMDB content
+        loadTMDBContent();
+
+        // Set initial hero content
+        if (!categories.isEmpty() && !categories.get(0).getItems().isEmpty()) {
+            currentSelectedItem = categories.get(0).getItems().get(0);
+            updateHeroContent(currentSelectedItem, 0);
         }
+
         loadingOverlay.setVisibility(View.GONE);
     }
 
     private void loadTMDBContent() {
         Log.d(TAG, "Loading TMDB content...");
 
-        // Load Popular Movies
+        // Popular Movies
         combinedRepository.getPopularMovies(1, new MediaRepositoryCombined.CombinedCallback<List<MediaItems>>() {
             @Override
             public void onSuccess(List<MediaItems> movies) {
-                Log.d(TAG, "Loaded " + movies.size() + " popular movies from TMDB");
-                addTMDBContentToList(movies, 7);
+                Log.d(TAG, "Loaded " + movies.size() + " popular movies");
+                categories.add(new CategorySection("🎬 Popular Movies", movies));
+                categoryAdapter.notifyDataSetChanged();
                 checkTMDBLoadingComplete();
             }
 
@@ -314,12 +291,13 @@ public class NetflixMainActivity extends AppCompatActivity {
             }
         });
 
-        // Load Popular TV Shows
+        // Popular TV Shows
         combinedRepository.getPopularTVShows(1, new MediaRepositoryCombined.CombinedCallback<List<MediaItems>>() {
             @Override
             public void onSuccess(List<MediaItems> tvShows) {
-                Log.d(TAG, "Loaded " + tvShows.size() + " popular TV shows from TMDB");
-                addTMDBContentToList(tvShows, 8);
+                Log.d(TAG, "Loaded " + tvShows.size() + " popular TV shows");
+                categories.add(new CategorySection("📺 Popular TV Shows", tvShows));
+                categoryAdapter.notifyDataSetChanged();
                 checkTMDBLoadingComplete();
             }
 
@@ -330,12 +308,13 @@ public class NetflixMainActivity extends AppCompatActivity {
             }
         });
 
-        // Load Top Rated Movies
+        // Top Rated Movies
         combinedRepository.getTopRatedMovies(1, new MediaRepositoryCombined.CombinedCallback<List<MediaItems>>() {
             @Override
             public void onSuccess(List<MediaItems> movies) {
-                Log.d(TAG, "Loaded " + movies.size() + " top rated movies from TMDB");
-                addTMDBContentToList(movies, 9);
+                Log.d(TAG, "Loaded " + movies.size() + " top rated movies");
+                categories.add(new CategorySection("⭐ Top Rated Movies", movies));
+                categoryAdapter.notifyDataSetChanged();
                 checkTMDBLoadingComplete();
             }
 
@@ -346,80 +325,35 @@ public class NetflixMainActivity extends AppCompatActivity {
             }
         });
 
-        // Load Trending Content
+        // Trending
         combinedRepository.getTrending(TMDBApiClient.ContentType.ALL, TMDBApiClient.TimeWindow.DAY,
                 new MediaRepositoryCombined.CombinedCallback<List<MediaItems>>() {
                     @Override
                     public void onSuccess(List<MediaItems> trending) {
-                        Log.d(TAG, "Loaded " + trending.size() + " trending items from TMDB");
-                        addTMDBContentToList(trending, 10);
+                        Log.d(TAG, "Loaded " + trending.size() + " trending items");
+                        categories.add(new CategorySection("🔥 Trending Now", trending));
+                        categoryAdapter.notifyDataSetChanged();
                         checkTMDBLoadingComplete();
                     }
 
                     @Override
                     public void onError(String error) {
-                        Log.e(TAG, "Error loading trending content: " + error);
+                        Log.e(TAG, "Error loading trending: " + error);
                         checkTMDBLoadingComplete();
                     }
                 });
     }
 
-    private void addTMDBContentToList(List<MediaItems> newContent, int categoryIndex) {
-        int insertPosition = getCategoryInsertPosition(categoryIndex);
-        allContent.addAll(insertPosition, newContent);
-
-        if (carouselAdapter != null) {
-            carouselAdapter.notifyDataSetChanged();
-        }
-    }
-
-    private int getCategoryInsertPosition(int categoryIndex) {
-        int position = 0;
-        int[] categorySizes = {
-                mediaRepository.getFeaturedMovies().size(),
-                mediaRepository.getActionMovies().size(),
-                mediaRepository.getComedyMovies().size(),
-                mediaRepository.getDramaMovies().size(),
-                mediaRepository.getDocumentaries().size(),
-                mediaRepository.getFormatDemos().size(),
-                apiRepository.getAPISampleContent().size()
-        };
-
-        for (int i = 0; i < categoryIndex && i < categorySizes.length; i++) {
-            position += categorySizes[i];
-        }
-
-        position += loadedTMDBCategories * 20;
-
-        return position;
-    }
-
     private void checkTMDBLoadingComplete() {
         loadedTMDBCategories++;
-        Log.d(TAG, "TMDB categories loaded: " + loadedTMDBCategories + "/" + TOTAL_TMDB_CATEGORIES);
+        Log.d(TAG, "TMDB loaded: " + loadedTMDBCategories + "/" + TOTAL_TMDB_CATEGORIES);
 
         if (loadedTMDBCategories >= TOTAL_TMDB_CATEGORIES) {
-            isLoadingTMDB = false;
-            loadingOverlay.setVisibility(View.GONE);
-            Log.d(TAG, "All TMDB content loaded. Total items: " + allContent.size());
-
-            if (!allContent.isEmpty()) {
-                updateHeroContent(allContent.get(0), 0);
-                if (carouselAdapter != null) {
-                    carouselAdapter.setSelectedPosition(0);
-                }
-            }
-        } else {
-            loadingOverlay.setVisibility(View.GONE);
+            Log.d(TAG, "All TMDB content loaded. Total categories: " + categories.size());
         }
     }
 
-    private void updateHeroContent(MediaItems mediaItems, int position) {
-        int categoryIndex = getCategoryIndex(position);
-        if (categoryIndex >= 0 && categoryIndex < CATEGORIES.length) {
-            categoryTitle.setText(CATEGORIES[categoryIndex]);
-        }
-
+    private void updateHeroContent(MediaItems mediaItems, int categoryPosition) {
         String imageUrl = mediaItems.getPrimaryImageUrl();
         if (imageUrl != null && !imageUrl.isEmpty()) {
             Glide.with(this)
@@ -436,7 +370,7 @@ public class NetflixMainActivity extends AppCompatActivity {
         maturityRating.setText("PG-13");
         qualityBadge.setText(mediaItems.hasValidVideoSources() ? "HD" : "Trailer");
 
-        int matchScore = 85 + (position % 15);
+        int matchScore = 85 + (categoryPosition * 2);
         matchScoreText.setText(matchScore + "% Match");
 
         if (mediaItems.isFromAPI() || mediaItems.isFromTMDB()) {
@@ -448,27 +382,6 @@ public class NetflixMainActivity extends AppCompatActivity {
 
         playButton.setEnabled(true);
         moreInfoButton.setEnabled(true);
-    }
-
-    private int getCategoryIndex(int position) {
-        int[] categorySizes = {
-                mediaRepository.getFeaturedMovies().size(),
-                mediaRepository.getActionMovies().size(),
-                mediaRepository.getComedyMovies().size(),
-                mediaRepository.getDramaMovies().size(),
-                mediaRepository.getDocumentaries().size(),
-                mediaRepository.getFormatDemos().size(),
-                apiRepository.getAPISampleContent().size()
-        };
-
-        int cumulativeSize = 0;
-        for (int i = 0; i < categorySizes.length; i++) {
-            cumulativeSize += categorySizes[i];
-            if (position < cumulativeSize) {
-                return i;
-            }
-        }
-        return 0;
     }
 
     private void fetchAndPlay(MediaItems mediaItems) {
@@ -486,7 +399,7 @@ public class NetflixMainActivity extends AppCompatActivity {
                                 launchPlayer(result);
                             } else {
                                 Toast.makeText(NetflixMainActivity.this,
-                                        "Streaming sources not available for this content",
+                                        "Streaming sources not available",
                                         Toast.LENGTH_LONG).show();
                                 playButton.setEnabled(true);
                                 moreInfoButton.setEnabled(true);
@@ -499,7 +412,7 @@ public class NetflixMainActivity extends AppCompatActivity {
                             playButton.setEnabled(true);
                             moreInfoButton.setEnabled(true);
                             Toast.makeText(NetflixMainActivity.this,
-                                    "Failed to load video sources: " + error,
+                                    "Failed to load: " + error,
                                     Toast.LENGTH_LONG).show();
                         }
                     });
@@ -524,7 +437,7 @@ public class NetflixMainActivity extends AppCompatActivity {
                             playButton.setEnabled(true);
                             moreInfoButton.setEnabled(true);
                             Toast.makeText(NetflixMainActivity.this,
-                                    "Failed to load video sources: " + error,
+                                    "Failed to load: " + error,
                                     Toast.LENGTH_LONG).show();
                         }
                     }
