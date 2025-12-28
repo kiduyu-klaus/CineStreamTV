@@ -69,15 +69,15 @@ public class ContentCarouselAdapter extends RecyclerView.Adapter<ContentCarousel
             focusOverlay = itemView.findViewById(R.id.focusOverlay);
 
             itemView.setOnFocusChangeListener((v, hasFocus) -> {
-                if (onItemClickListener != null && getAdapterPosition() != RecyclerView.NO_POSITION) {
-                    onItemClickListener.onFocusChanged(contentList.get(getAdapterPosition()), getAdapterPosition(), hasFocus);
+                if (onItemClickListener != null && getAbsoluteAdapterPosition() != RecyclerView.NO_POSITION) {
+                    onItemClickListener.onFocusChanged(contentList.get(getAbsoluteAdapterPosition()), getAbsoluteAdapterPosition(), hasFocus);
                 }
                 updateFocusState(hasFocus);
             });
 
             itemView.setOnClickListener(v -> {
-                if (onItemClickListener != null && getAdapterPosition() != RecyclerView.NO_POSITION) {
-                    onItemClickListener.onItemClick(contentList.get(getAdapterPosition()), getAdapterPosition());
+                if (onItemClickListener != null && getAbsoluteAdapterPosition() != RecyclerView.NO_POSITION) {
+                    onItemClickListener.onItemClick(contentList.get(getAbsoluteAdapterPosition()), getAbsoluteAdapterPosition());
                 }
             });
         }

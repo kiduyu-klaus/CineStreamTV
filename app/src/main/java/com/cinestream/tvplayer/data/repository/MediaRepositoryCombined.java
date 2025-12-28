@@ -240,7 +240,7 @@ public class MediaRepositoryCombined {
         List<MediaItems> enhanced = new ArrayList<>();
         final int[] completed = {0};
         final int total = items.size();
-
+/**
         for (MediaItems item : items) {
             fetchStreamingSources(item, new CombinedCallback<MediaItems>() {
                 @Override
@@ -264,7 +264,7 @@ public class MediaRepositoryCombined {
                     }
                 }
             });
-        }
+        } */
     }
 
     /**

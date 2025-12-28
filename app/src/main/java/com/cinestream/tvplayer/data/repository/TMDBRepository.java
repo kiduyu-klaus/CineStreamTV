@@ -83,8 +83,10 @@ public class TMDBRepository {
                 List<MediaItems> movies = tmdbApiClient.getPopularMovies(page);
                 
                 // Cache the result
-                cacheResponse(cacheKey, movies);
-                
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    cacheResponse(cacheKey, movies);
+                }
+
                 mainHandler.post(() -> callback.onSuccess(movies));
             } catch (Exception e) {
                 Log.e(TAG, "Error fetching popular movies", e);

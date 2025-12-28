@@ -12,7 +12,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -166,12 +168,12 @@ public class NetflixMainActivity extends AppCompatActivity {
         
         // Combine all content from different categories
         allContent.clear();
-        allContent.addAll(mediaRepository.getFeaturedMovies());
-        allContent.addAll(mediaRepository.getActionMovies());
-        allContent.addAll(mediaRepository.getComedyMovies());
-        allContent.addAll(mediaRepository.getDramaMovies());
-        allContent.addAll(mediaRepository.getDocumentaries());
-        allContent.addAll(mediaRepository.getFormatDemos());
+//        allContent.addAll(mediaRepository.getFeaturedMovies());
+//        allContent.addAll(mediaRepository.getActionMovies());
+//        allContent.addAll(mediaRepository.getComedyMovies());
+//        allContent.addAll(mediaRepository.getDramaMovies());
+//        allContent.addAll(mediaRepository.getDocumentaries());
+//        allContent.addAll(mediaRepository.getFormatDemos());
         allContent.addAll(apiRepository.getAPISampleContent());
         
         // Load TMDB content in the background
@@ -202,6 +204,7 @@ public class NetflixMainActivity extends AppCompatActivity {
             updateHeroContent(allContent.get(0), 0);
             carouselAdapter.setSelectedPosition(0);
         }
+        loadingOverlay.setVisibility(View.GONE);
         
         // Don't hide loading overlay yet - wait for TMDB content
     }
@@ -325,6 +328,8 @@ public class NetflixMainActivity extends AppCompatActivity {
                     carouselAdapter.setSelectedPosition(0);
                 }
             }
+        }else{
+            loadingOverlay.setVisibility(View.GONE);
         }
     }
 
@@ -457,6 +462,7 @@ public class NetflixMainActivity extends AppCompatActivity {
         }
     }
 
+    @OptIn(markerClass = UnstableApi.class)
     private void launchPlayer(MediaItems mediaItems) {
         Intent intent = new Intent(this, PlayerActivity.class);
         intent.putExtra("media_item", mediaItems);

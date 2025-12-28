@@ -80,7 +80,7 @@ public class MediaRepositoryVideasy {
         cyberpunk.setId("api_tv_cyberpunk");
         cyberpunk.setTitle("Cyberpunk Edgerunners");
         cyberpunk.setDescription("In a dystopia overrun by corruption, crime, and cybernetic implants, a desperate street kid tries to survive as an edgerunner— a high-level mercenary and cyberspace netrunner.");
-        cyberpunk.setPosterUrl("https://image.tmdb.org/t/p/w500/r1P7yRKaK6cYQ5hQ8d5cLw2KqN2.jpg");
+        cyberpunk.setPosterUrl("https://image.tmdb.org/t/p/original/7jSWOc6jWSw5hZ78HB8Hw3pJxuk.jpg");
         cyberpunk.setDuration("24min");
         cyberpunk.setYear(2022);
         cyberpunk.setGenre("Animation");
@@ -96,7 +96,7 @@ public class MediaRepositoryVideasy {
         fastX.setId("api_movie_fastx");
         fastX.setTitle("Fast X");
         fastX.setDescription("Dom Toretto and his family are targeted by the vengeful son of drug kingpin Hernan Reyes.");
-        fastX.setPosterUrl("https://image.tmdb.org/t/p/w500/fiVW06jE7S9U2xM7K588WaS2y8T.jpg");
+        fastX.setPosterUrl("https://image.tmdb.org/t/p/original/fiVW06jE7z9YnO4trhaMEdclSiC.jpg");
         fastX.setDuration("2h 21min");
         fastX.setYear(2023);
         fastX.setGenre("Action");
