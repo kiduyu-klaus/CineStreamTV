@@ -3,6 +3,7 @@ package com.cinestream.tvplayer.ui.main;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -39,6 +40,11 @@ public class NetflixMainActivity extends AppCompatActivity {
     // UI Components
     private ImageView heroBackgroundImage;
     private ImageView searchIcon;
+    private ImageView homeIcon;
+    private ImageView moviesIcon;
+    private ImageView tvIcon;
+    private ImageView apiIcon;
+    private ImageView myListIcon;
     private ImageView settingsIcon;
     private TextView nSeriesBadge;
     private TextView matchScoreText;
@@ -65,7 +71,7 @@ public class NetflixMainActivity extends AppCompatActivity {
     private MediaRepositoryVideasy apiRepository;
     private MediaRepositoryCombined combinedRepository;
     private int currentSelectedPosition = 0;
-    
+
     // TMDB Loading states
     private boolean isLoadingTMDB = false;
     private int loadedTMDBCategories = 0;
@@ -73,30 +79,31 @@ public class NetflixMainActivity extends AppCompatActivity {
 
     // Categories - Updated with TMDB content
     private static final String[] CATEGORIES = {
-        "Featured Movies",
-        "Action & Adventure", 
-        "Comedy",
-        "Drama",
-        "Documentaries",
-        "Format Demos",
-        "🎆 Live API Content",
-        "🎬 Popular Movies",
-        "📺 Popular TV Shows", 
-        "⭐ Top Rated Movies",
-        "🔥 Trending Now"
+            "Featured Movies",
+            "Action & Adventure",
+            "Comedy",
+            "Drama",
+            "Documentaries",
+            "Format Demos",
+            "🎆 Live API Content",
+            "🎬 Popular Movies",
+            "📺 Popular TV Shows",
+            "⭐ Top Rated Movies",
+            "🔥 Trending Now"
     };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_netflix);
-        
+
         mediaRepository = new MediaRepository();
         apiRepository = MediaRepositoryVideasy.getInstance();
         combinedRepository = MediaRepositoryCombined.getInstance();
-        
+
         initializeViews();
         setupClickListeners();
+        setupNavigationFocus();
         loadContent();
     }
 
@@ -104,6 +111,11 @@ public class NetflixMainActivity extends AppCompatActivity {
         // Hero content views
         heroBackgroundImage = findViewById(R.id.heroBackgroundImage);
         searchIcon = findViewById(R.id.searchIcon);
+        homeIcon = findViewById(R.id.homeIcon);
+        moviesIcon = findViewById(R.id.moviesIcon);
+        tvIcon = findViewById(R.id.tvIcon);
+        apiIcon = findViewById(R.id.apiIcon);
+        myListIcon = findViewById(R.id.myListIcon);
         settingsIcon = findViewById(R.id.settingsIcon);
         nSeriesBadge = findViewById(R.id.nSeriesBadge);
         matchScoreText = findViewById(R.id.matchScoreText);
@@ -122,63 +134,139 @@ public class NetflixMainActivity extends AppCompatActivity {
         // Carousel
         categoryTitle = findViewById(R.id.categoryTitle);
         contentRecyclerView = findViewById(R.id.contentRecyclerView);
-        
+
         // Setup RecyclerView
         contentRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        
+
         // Loading
         loadingOverlay = findViewById(R.id.loadingOverlay);
         loadingProgressBar = findViewById(R.id.loadingProgressBar);
     }
 
+    private void setupNavigationFocus() {
+        // Set initial focus to home icon
+        homeIcon.requestFocus();
+        homeIcon.setSelected(true);
+
+        // Setup focus change listeners for navigation icons
+        View.OnFocusChangeListener navFocusListener = (v, hasFocus) -> {
+            if (hasFocus) {
+                v.setSelected(true);
+                // Add scale animation
+                v.animate().scaleX(1.1f).scaleY(1.1f).setDuration(200).start();
+            } else {
+                v.setSelected(false);
+                v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start();
+            }
+        };
+
+        searchIcon.setOnFocusChangeListener(navFocusListener);
+        homeIcon.setOnFocusChangeListener(navFocusListener);
+        moviesIcon.setOnFocusChangeListener(navFocusListener);
+        tvIcon.setOnFocusChangeListener(navFocusListener);
+        apiIcon.setOnFocusChangeListener(navFocusListener);
+        myListIcon.setOnFocusChangeListener(navFocusListener);
+        settingsIcon.setOnFocusChangeListener(navFocusListener);
+    }
+
     private void setupClickListeners() {
         // Play button
         playButton.setOnClickListener(v -> {
-            MediaItems currentItem = allContent.get(currentSelectedPosition);
-            if (currentItem.isFromAPI() || currentItem.isFromTMDB()) {
-                fetchAndPlay(currentItem);
-            } else {
-                launchPlayer(currentItem);
+            if (!allContent.isEmpty() && currentSelectedPosition < allContent.size()) {
+                MediaItems currentItem = allContent.get(currentSelectedPosition);
+                if (currentItem.isFromAPI() || currentItem.isFromTMDB()) {
+                    fetchAndPlay(currentItem);
+                } else {
+                    launchPlayer(currentItem);
+                }
             }
         });
 
         // More info button
         moreInfoButton.setOnClickListener(v -> {
-            MediaItems currentItem = allContent.get(currentSelectedPosition);
-            launchDetails(currentItem);
+            if (!allContent.isEmpty() && currentSelectedPosition < allContent.size()) {
+                MediaItems currentItem = allContent.get(currentSelectedPosition);
+                launchDetails(currentItem);
+            }
         });
-        
-        // Search icon click
+
+        // Navigation icon clicks
         searchIcon.setOnClickListener(v -> {
             Intent intent = new Intent(NetflixMainActivity.this, SearchActivity.class);
             startActivity(intent);
         });
-        
-        // Settings icon click
+
+        homeIcon.setOnClickListener(v -> {
+            // Already on home - could refresh content
+            loadContent();
+            Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show();
+        });
+
+        moviesIcon.setOnClickListener(v -> {
+            // Filter to show only movies
+            Toast.makeText(this, "Movies - Coming Soon", Toast.LENGTH_SHORT).show();
+        });
+
+        tvIcon.setOnClickListener(v -> {
+            // Filter to show only TV shows
+            Toast.makeText(this, "TV Shows - Coming Soon", Toast.LENGTH_SHORT).show();
+        });
+
+        apiIcon.setOnClickListener(v -> {
+            // Show API content
+            Toast.makeText(this, "API Content", Toast.LENGTH_SHORT).show();
+        });
+
+        myListIcon.setOnClickListener(v -> {
+            // Show user's list
+            Toast.makeText(this, "My List - Coming Soon", Toast.LENGTH_SHORT).show();
+        });
+
         settingsIcon.setOnClickListener(v -> {
             Intent intent = new Intent(NetflixMainActivity.this, SettingsActivity.class);
             startActivity(intent);
         });
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        // Handle D-pad navigation for better TV experience
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+                // If we're in the content area, move to navigation sidebar
+                if (contentRecyclerView.hasFocus()) {
+                    homeIcon.requestFocus();
+                    return true;
+                }
+                break;
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+                // If we're in navigation, move to content
+                if (searchIcon.hasFocus() || homeIcon.hasFocus() ||
+                        moviesIcon.hasFocus() || tvIcon.hasFocus() ||
+                        apiIcon.hasFocus() || myListIcon.hasFocus() ||
+                        settingsIcon.hasFocus()) {
+                    if (!allContent.isEmpty()) {
+                        contentRecyclerView.requestFocus();
+                    }
+                    return true;
+                }
+                break;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
     private void loadContent() {
         loadingOverlay.setVisibility(View.VISIBLE);
         isLoadingTMDB = true;
         loadedTMDBCategories = 0;
-        
+
         // Combine all content from different categories
         allContent.clear();
-//        allContent.addAll(mediaRepository.getFeaturedMovies());
-//        allContent.addAll(mediaRepository.getActionMovies());
-//        allContent.addAll(mediaRepository.getComedyMovies());
-//        allContent.addAll(mediaRepository.getDramaMovies());
-//        allContent.addAll(mediaRepository.getDocumentaries());
-//        allContent.addAll(mediaRepository.getFormatDemos());
         allContent.addAll(apiRepository.getAPISampleContent());
-        
+
         // Load TMDB content in the background
         loadTMDBContent();
-        
+
         // Setup adapter with initial content
         carouselAdapter = new ContentCarouselAdapter(allContent);
         contentRecyclerView.setAdapter(carouselAdapter);
@@ -205,142 +293,133 @@ public class NetflixMainActivity extends AppCompatActivity {
             carouselAdapter.setSelectedPosition(0);
         }
         loadingOverlay.setVisibility(View.GONE);
-        
-        // Don't hide loading overlay yet - wait for TMDB content
     }
-    
+
     private void loadTMDBContent() {
         Log.d(TAG, "Loading TMDB content...");
-        
+
         // Load Popular Movies
         combinedRepository.getPopularMovies(1, new MediaRepositoryCombined.CombinedCallback<List<MediaItems>>() {
             @Override
             public void onSuccess(List<MediaItems> movies) {
                 Log.d(TAG, "Loaded " + movies.size() + " popular movies from TMDB");
-                addTMDBContentToList(movies, 7); // Popular Movies category index
+                addTMDBContentToList(movies, 7);
                 checkTMDBLoadingComplete();
             }
-            
+
             @Override
             public void onError(String error) {
                 Log.e(TAG, "Error loading popular movies: " + error);
                 checkTMDBLoadingComplete();
             }
         });
-        
+
         // Load Popular TV Shows
         combinedRepository.getPopularTVShows(1, new MediaRepositoryCombined.CombinedCallback<List<MediaItems>>() {
             @Override
             public void onSuccess(List<MediaItems> tvShows) {
                 Log.d(TAG, "Loaded " + tvShows.size() + " popular TV shows from TMDB");
-                addTMDBContentToList(tvShows, 8); // Popular TV Shows category index
+                addTMDBContentToList(tvShows, 8);
                 checkTMDBLoadingComplete();
             }
-            
+
             @Override
             public void onError(String error) {
                 Log.e(TAG, "Error loading popular TV shows: " + error);
                 checkTMDBLoadingComplete();
             }
         });
-        
+
         // Load Top Rated Movies
         combinedRepository.getTopRatedMovies(1, new MediaRepositoryCombined.CombinedCallback<List<MediaItems>>() {
             @Override
             public void onSuccess(List<MediaItems> movies) {
                 Log.d(TAG, "Loaded " + movies.size() + " top rated movies from TMDB");
-                addTMDBContentToList(movies, 9); // Top Rated Movies category index
+                addTMDBContentToList(movies, 9);
                 checkTMDBLoadingComplete();
             }
-            
+
             @Override
             public void onError(String error) {
                 Log.e(TAG, "Error loading top rated movies: " + error);
                 checkTMDBLoadingComplete();
             }
         });
-        
+
         // Load Trending Content
-        combinedRepository.getTrending(TMDBApiClient.ContentType.ALL, TMDBApiClient.TimeWindow.DAY, 
-            new MediaRepositoryCombined.CombinedCallback<List<MediaItems>>() {
-                @Override
-                public void onSuccess(List<MediaItems> trending) {
-                    Log.d(TAG, "Loaded " + trending.size() + " trending items from TMDB");
-                    addTMDBContentToList(trending, 10); // Trending Now category index
-                    checkTMDBLoadingComplete();
-                }
-                
-                @Override
-                public void onError(String error) {
-                    Log.e(TAG, "Error loading trending content: " + error);
-                    checkTMDBLoadingComplete();
-                }
-            });
+        combinedRepository.getTrending(TMDBApiClient.ContentType.ALL, TMDBApiClient.TimeWindow.DAY,
+                new MediaRepositoryCombined.CombinedCallback<List<MediaItems>>() {
+                    @Override
+                    public void onSuccess(List<MediaItems> trending) {
+                        Log.d(TAG, "Loaded " + trending.size() + " trending items from TMDB");
+                        addTMDBContentToList(trending, 10);
+                        checkTMDBLoadingComplete();
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Log.e(TAG, "Error loading trending content: " + error);
+                        checkTMDBLoadingComplete();
+                    }
+                });
     }
-    
+
     private void addTMDBContentToList(List<MediaItems> newContent, int categoryIndex) {
         int insertPosition = getCategoryInsertPosition(categoryIndex);
         allContent.addAll(insertPosition, newContent);
-        
-        // Update adapter
+
         if (carouselAdapter != null) {
             carouselAdapter.notifyDataSetChanged();
         }
     }
-    
+
     private int getCategoryInsertPosition(int categoryIndex) {
-        // Calculate the position where to insert TMDB content
         int position = 0;
         int[] categorySizes = {
-            mediaRepository.getFeaturedMovies().size(),
-            mediaRepository.getActionMovies().size(),
-            mediaRepository.getComedyMovies().size(),
-            mediaRepository.getDramaMovies().size(),
-            mediaRepository.getDocumentaries().size(),
-            mediaRepository.getFormatDemos().size(),
-            apiRepository.getAPISampleContent().size()
+                mediaRepository.getFeaturedMovies().size(),
+                mediaRepository.getActionMovies().size(),
+                mediaRepository.getComedyMovies().size(),
+                mediaRepository.getDramaMovies().size(),
+                mediaRepository.getDocumentaries().size(),
+                mediaRepository.getFormatDemos().size(),
+                apiRepository.getAPISampleContent().size()
         };
-        
-        // Add sizes of categories before the TMDB category
+
         for (int i = 0; i < categoryIndex && i < categorySizes.length; i++) {
             position += categorySizes[i];
         }
-        
-        // Add already loaded TMDB categories
-        position += loadedTMDBCategories * 20; // Assume 20 items per TMDB category
-        
+
+        position += loadedTMDBCategories * 20;
+
         return position;
     }
-    
+
     private void checkTMDBLoadingComplete() {
         loadedTMDBCategories++;
         Log.d(TAG, "TMDB categories loaded: " + loadedTMDBCategories + "/" + TOTAL_TMDB_CATEGORIES);
-        
+
         if (loadedTMDBCategories >= TOTAL_TMDB_CATEGORIES) {
             isLoadingTMDB = false;
             loadingOverlay.setVisibility(View.GONE);
             Log.d(TAG, "All TMDB content loaded. Total items: " + allContent.size());
-            
-            // Update initial content if needed
+
             if (!allContent.isEmpty()) {
                 updateHeroContent(allContent.get(0), 0);
                 if (carouselAdapter != null) {
                     carouselAdapter.setSelectedPosition(0);
                 }
             }
-        }else{
+        } else {
             loadingOverlay.setVisibility(View.GONE);
         }
     }
 
     private void updateHeroContent(MediaItems mediaItems, int position) {
-        // Update category title based on position
         int categoryIndex = getCategoryIndex(position);
         if (categoryIndex >= 0 && categoryIndex < CATEGORIES.length) {
             categoryTitle.setText(CATEGORIES[categoryIndex]);
         }
 
-        // Update hero background - Use primary image URL
         String imageUrl = mediaItems.getPrimaryImageUrl();
         if (imageUrl != null && !imageUrl.isEmpty()) {
             Glide.with(this)
@@ -349,21 +428,17 @@ public class NetflixMainActivity extends AppCompatActivity {
                     .into(heroBackgroundImage);
         }
 
-        // Update content information
         contentTitle.setText(mediaItems.getTitle());
         yearText.setText(mediaItems.getYear() > 0 ? String.valueOf(mediaItems.getYear()) : "");
         durationText.setText(mediaItems.getDuration());
         synopsisText.setText(mediaItems.getDescription());
-        
-        // Update metadata
-        maturityRating.setText("PG-13"); // Default, could be dynamic
+
+        maturityRating.setText("PG-13");
         qualityBadge.setText(mediaItems.hasValidVideoSources() ? "HD" : "Trailer");
-        
-        // Update match score (simulated)
-        int matchScore = 85 + (position % 15); // 85-99%
+
+        int matchScore = 85 + (position % 15);
         matchScoreText.setText(matchScore + "% Match");
 
-        // Set N Series badge for API content (Videasy or TMDB)
         if (mediaItems.isFromAPI() || mediaItems.isFromTMDB()) {
             nSeriesBadge.setVisibility(View.VISIBLE);
             nSeriesBadge.setText(mediaItems.isFromTMDB() ? "TMDB" : "N Series");
@@ -371,21 +446,19 @@ public class NetflixMainActivity extends AppCompatActivity {
             nSeriesBadge.setVisibility(View.GONE);
         }
 
-        // Update button states
         playButton.setEnabled(true);
         moreInfoButton.setEnabled(true);
     }
 
     private int getCategoryIndex(int position) {
-        // Map position to category
         int[] categorySizes = {
-            mediaRepository.getFeaturedMovies().size(),
-            mediaRepository.getActionMovies().size(),
-            mediaRepository.getComedyMovies().size(),
-            mediaRepository.getDramaMovies().size(),
-            mediaRepository.getDocumentaries().size(),
-            mediaRepository.getFormatDemos().size(),
-            apiRepository.getAPISampleContent().size()
+                mediaRepository.getFeaturedMovies().size(),
+                mediaRepository.getActionMovies().size(),
+                mediaRepository.getComedyMovies().size(),
+                mediaRepository.getDramaMovies().size(),
+                mediaRepository.getDocumentaries().size(),
+                mediaRepository.getFormatDemos().size(),
+                apiRepository.getAPISampleContent().size()
         };
 
         int cumulativeSize = 0;
@@ -404,60 +477,57 @@ public class NetflixMainActivity extends AppCompatActivity {
         moreInfoButton.setEnabled(false);
 
         if (mediaItems.isFromTMDB()) {
-            // Use combined repository for TMDB content
             combinedRepository.fetchStreamingSources(mediaItems,
-                new MediaRepositoryCombined.CombinedCallback<MediaItems>() {
-                    @Override
-                    public void onSuccess(MediaItems result) {
-                        loadingOverlay.setVisibility(View.GONE);
-                        if (result.hasValidVideoSources()) {
-                            launchPlayer(result);
-                        } else {
-                            // Show message that streaming sources not available
-                            Toast.makeText(NetflixMainActivity.this, 
-                                "Streaming sources not available for this content", 
-                                Toast.LENGTH_LONG).show();
+                    new MediaRepositoryCombined.CombinedCallback<MediaItems>() {
+                        @Override
+                        public void onSuccess(MediaItems result) {
+                            loadingOverlay.setVisibility(View.GONE);
+                            if (result.hasValidVideoSources()) {
+                                launchPlayer(result);
+                            } else {
+                                Toast.makeText(NetflixMainActivity.this,
+                                        "Streaming sources not available for this content",
+                                        Toast.LENGTH_LONG).show();
+                                playButton.setEnabled(true);
+                                moreInfoButton.setEnabled(true);
+                            }
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            loadingOverlay.setVisibility(View.GONE);
                             playButton.setEnabled(true);
                             moreInfoButton.setEnabled(true);
+                            Toast.makeText(NetflixMainActivity.this,
+                                    "Failed to load video sources: " + error,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    });
+        } else {
+            apiRepository.fetchVideoSources(
+                    mediaItems.getTitle(),
+                    mediaItems.getMediaType(),
+                    String.valueOf(mediaItems.getYear()),
+                    mediaItems.getTmdbId(),
+                    mediaItems.getSeason(),
+                    mediaItems.getEpisode(),
+                    new MediaRepositoryVideasy.ApiCallback<MediaItems>() {
+                        @Override
+                        public void onSuccess(MediaItems result) {
+                            loadingOverlay.setVisibility(View.GONE);
+                            launchPlayer(result);
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            loadingOverlay.setVisibility(View.GONE);
+                            playButton.setEnabled(true);
+                            moreInfoButton.setEnabled(true);
+                            Toast.makeText(NetflixMainActivity.this,
+                                    "Failed to load video sources: " + error,
+                                    Toast.LENGTH_LONG).show();
                         }
                     }
-                    
-                    @Override
-                    public void onError(String error) {
-                        loadingOverlay.setVisibility(View.GONE);
-                        playButton.setEnabled(true);
-                        moreInfoButton.setEnabled(true);
-                        Toast.makeText(NetflixMainActivity.this, 
-                            "Failed to load video sources: " + error, 
-                            Toast.LENGTH_LONG).show();
-                    }
-                });
-        } else {
-            // Use original API repository for Videasy content
-            apiRepository.fetchVideoSources(
-                mediaItems.getTitle(),
-                mediaItems.getMediaType(),
-                String.valueOf(mediaItems.getYear()),
-                mediaItems.getTmdbId(),
-                mediaItems.getSeason(),
-                mediaItems.getEpisode(),
-                new MediaRepositoryVideasy.ApiCallback<MediaItems>() {
-                    @Override
-                    public void onSuccess(MediaItems result) {
-                        loadingOverlay.setVisibility(View.GONE);
-                        launchPlayer(result);
-                    }
-
-                    @Override
-                    public void onError(String error) {
-                        loadingOverlay.setVisibility(View.GONE);
-                        playButton.setEnabled(true);
-                        moreInfoButton.setEnabled(true);
-                        Toast.makeText(NetflixMainActivity.this, 
-                            "Failed to load video sources: " + error, 
-                            Toast.LENGTH_LONG).show();
-                    }
-                }
             );
         }
     }
@@ -478,7 +548,6 @@ public class NetflixMainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Refresh content when returning to main activity
         loadContent();
     }
 
@@ -492,6 +561,6 @@ public class NetflixMainActivity extends AppCompatActivity {
             combinedRepository.cleanup();
         }
     }
-    
+
     private static final String TAG = "NetflixMainActivity";
 }

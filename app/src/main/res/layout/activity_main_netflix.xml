@@ -43,79 +43,107 @@
         <!-- Search Icon -->
         <ImageView
             android:id="@+id/searchIcon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_margin="16dp"
+            android:padding="8dp"
             android:focusable="true"
             android:focusableInTouchMode="true"
+            android:clickable="true"
+            android:background="@drawable/navigation_icon_selector"
             android:src="@drawable/ic_search"
-            app:tint="@color/gray_light" />
+            android:contentDescription="Search"
+            app:tint="@drawable/icon_tint_selector" />
 
         <!-- Home Icon -->
         <ImageView
             android:id="@+id/homeIcon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_margin="16dp"
+            android:padding="8dp"
             android:focusable="true"
             android:focusableInTouchMode="true"
+            android:clickable="true"
+            android:background="@drawable/navigation_icon_selector"
             android:src="@drawable/ic_home"
-            app:tint="@color/white" />
+            android:contentDescription="Home"
+            app:tint="@drawable/icon_tint_selector" />
 
         <!-- Movies Icon -->
         <ImageView
             android:id="@+id/moviesIcon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_margin="16dp"
+            android:padding="8dp"
             android:focusable="true"
             android:focusableInTouchMode="true"
+            android:clickable="true"
+            android:background="@drawable/navigation_icon_selector"
             android:src="@drawable/ic_movie"
-            app:tint="@color/gray_light" />
+            android:contentDescription="Movies"
+            app:tint="@drawable/icon_tint_selector" />
 
         <!-- TV Shows Icon -->
         <ImageView
             android:id="@+id/tvIcon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_margin="16dp"
+            android:padding="8dp"
             android:focusable="true"
             android:focusableInTouchMode="true"
+            android:clickable="true"
+            android:background="@drawable/navigation_icon_selector"
             android:src="@drawable/ic_tv"
-            app:tint="@color/gray_light" />
+            android:contentDescription="TV Shows"
+            app:tint="@drawable/icon_tint_selector" />
 
         <!-- API Content Icon -->
         <ImageView
             android:id="@+id/apiIcon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_margin="16dp"
+            android:padding="8dp"
             android:focusable="true"
             android:focusableInTouchMode="true"
+            android:clickable="true"
+            android:background="@drawable/navigation_icon_selector"
             android:src="@drawable/ic_api"
-            app:tint="@color/cinema_red" />
+            android:contentDescription="API Content"
+            app:tint="@drawable/icon_tint_selector" />
 
         <!-- My List Icon -->
         <ImageView
             android:id="@+id/myListIcon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_margin="16dp"
+            android:padding="8dp"
             android:focusable="true"
             android:focusableInTouchMode="true"
+            android:clickable="true"
+            android:background="@drawable/navigation_icon_selector"
             android:src="@drawable/ic_list"
-            app:tint="@color/gray_light" />
+            android:contentDescription="My List"
+            app:tint="@drawable/icon_tint_selector" />
 
         <!-- Settings Icon -->
         <ImageView
             android:id="@+id/settingsIcon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_margin="16dp"
+            android:padding="8dp"
             android:focusable="true"
             android:focusableInTouchMode="true"
+            android:clickable="true"
+            android:background="@drawable/navigation_icon_selector"
             android:src="@drawable/ic_settings"
-            app:tint="@color/gray_light" />
+            android:contentDescription="Settings"
+            app:tint="@drawable/icon_tint_selector" />
 
     </LinearLayout>
 
@@ -255,7 +283,9 @@
                     android:layout_width="160dp"
                     android:layout_height="48dp"
                     android:layout_marginEnd="16dp"
-                    android:background="@color/white"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:background="@drawable/button_selector"
                     android:text="Play"
                     android:textColor="@android:color/black"
                     android:textSize="18sp"
@@ -265,7 +295,9 @@
                     android:id="@+id/moreInfoButton"
                     android:layout_width="160dp"
                     android:layout_height="48dp"
-                    android:background="#CCFFFFFF"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:background="@drawable/button_more_info_selector"
                     android:text="More Info"
                     android:textColor="@color/white"
                     android:textSize="18sp"

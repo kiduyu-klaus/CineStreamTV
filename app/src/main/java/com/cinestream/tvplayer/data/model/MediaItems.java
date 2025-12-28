@@ -19,7 +19,7 @@ public class MediaItems implements Parcelable {
     private boolean isLive;
     private String hlsUrl;
     private String dashUrl;
-    
+
     // TMDB-specific fields
     private String tmdbId;
     private String mediaType; // "movie" or "tv"
@@ -30,12 +30,12 @@ public class MediaItems implements Parcelable {
     private String tagline;
     private int voteCount;
     private List<String> genres;
-    
+
     // Image URLs
     private String backgroundImageUrl;
     private String heroImageUrl;
     private String cardImageUrl;
-    
+
     // API sources
     private List<VideoSource> videoSources;
     private List<SubtitleItem> subtitles;
@@ -70,18 +70,18 @@ public class MediaItems implements Parcelable {
         status = in.readString();
         tagline = in.readString();
         voteCount = in.readInt();
-        
+
         // Read lists
         genres = new ArrayList<>();
         in.readList(genres, String.class.getClassLoader());
-        
+
         backgroundImageUrl = in.readString();
         heroImageUrl = in.readString();
         cardImageUrl = in.readString();
-        
+
         videoSources = new ArrayList<>();
         in.readList(videoSources, VideoSource.class.getClassLoader());
-        
+
         subtitles = new ArrayList<>();
         in.readList(subtitles, SubtitleItem.class.getClassLoader());
     }
@@ -235,74 +235,74 @@ public class MediaItems implements Parcelable {
     public void setEpisode(String episode) {
         this.episode = episode;
     }
-    
+
     public boolean isFromTMDB() {
         return isFromTMDB;
     }
-    
+
     public void setFromTMDB(boolean fromTMDB) {
         isFromTMDB = fromTMDB;
     }
-    
+
     public String getStatus() {
         return status;
     }
-    
+
     public void setStatus(String status) {
         this.status = status;
     }
-    
+
     public String getTagline() {
         return tagline;
     }
-    
+
     public void setTagline(String tagline) {
         this.tagline = tagline;
     }
-    
+
     public int getVoteCount() {
         return voteCount;
     }
-    
+
     public void setVoteCount(int voteCount) {
         this.voteCount = voteCount;
     }
-    
+
     public List<String> getGenres() {
         return genres;
     }
-    
+
     public void setGenres(List<String> genres) {
         this.genres = genres;
     }
-    
+
     public String getGenresAsString() {
         if (genres == null || genres.isEmpty()) {
             return "";
         }
         return String.join(", ", genres);
     }
-    
+
     public String getBackgroundImageUrl() {
         return backgroundImageUrl;
     }
-    
+
     public void setBackgroundImageUrl(String backgroundImageUrl) {
         this.backgroundImageUrl = backgroundImageUrl;
     }
-    
+
     public String getHeroImageUrl() {
         return heroImageUrl;
     }
-    
+
     public void setHeroImageUrl(String heroImageUrl) {
         this.heroImageUrl = heroImageUrl;
     }
-    
+
     public String getCardImageUrl() {
         return cardImageUrl;
     }
-    
+
     public void setCardImageUrl(String cardImageUrl) {
         this.cardImageUrl = cardImageUrl;
     }
@@ -327,14 +327,14 @@ public class MediaItems implements Parcelable {
     public boolean isFromAPI() {
         return tmdbId != null && !tmdbId.isEmpty();
     }
-    
+
     public boolean hasValidVideoSources() {
         return (videoSources != null && !videoSources.isEmpty()) ||
-               (hlsUrl != null && !hlsUrl.isEmpty()) ||
-               (dashUrl != null && !dashUrl.isEmpty()) ||
-               (videoUrl != null && !videoUrl.isEmpty());
+                (hlsUrl != null && !hlsUrl.isEmpty()) ||
+                (dashUrl != null && !dashUrl.isEmpty()) ||
+                (videoUrl != null && !videoUrl.isEmpty());
     }
-    
+
     public String getPrimaryImageUrl() {
         // Priority order: hero, background, poster
         if (heroImageUrl != null && !heroImageUrl.isEmpty()) {
@@ -361,7 +361,7 @@ public class MediaItems implements Parcelable {
             // Return first available source
             return videoSources.get(0).getUrl();
         }
-        
+
         // Fallback to regular video URL
         if (hlsUrl != null && !hlsUrl.isEmpty()) {
             return hlsUrl;
@@ -407,7 +407,7 @@ public class MediaItems implements Parcelable {
         dest.writeList(videoSources);
         dest.writeList(subtitles);
     }
-    
+
     // Static classes to match VideasyAPI structure
     public static class VideoSource {
         private String quality;
@@ -436,7 +436,7 @@ public class MediaItems implements Parcelable {
             this.url = url;
         }
     }
-    
+
     public static class SubtitleItem {
         private String url;
         private String lang;
