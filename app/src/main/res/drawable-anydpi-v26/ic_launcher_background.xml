@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Background -->
+    <path
+        android:pathData="M0,0 L108,0 L108,108 L0,108 Z"
+        android:fillColor="#0a0a0a"/>
+
+    <!-- Subtle circular gradient -->
+    <path
+        android:pathData="M54,54 m-40,0 a40,40 0 1,1 80,0 a40,40 0 1,1 -80,0"
+        android:fillColor="#141414"
+        android:fillAlpha="0.8"/>
+
+    <!-- Outer ring -->
+    <path
+        android:pathData="M54,54 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0"
+        android:strokeColor="#E50914"
+        android:strokeWidth="2"
+        android:fillColor="@android:color/transparent"
+        android:strokeAlpha="0.6"/>
+
+    <!-- Inner circle -->
+    <path
+        android:pathData="M54,54 m-35,0 a35,35 0 1,1 70,0 a35,35 0 1,1 -70,0"
+        android:fillColor="#000000"
+        android:fillAlpha="0.4"/>
+
+    <!-- Play button circle -->
+    <path
+        android:pathData="M54,54 m-20,0 a20,20 0 1,1 40,0 a20,20 0 1,1 -40,0"
+        android:fillColor="#000000"
+        android:fillAlpha="0.8"/>
+
+    <!-- Play button -->
+    <path
+        android:pathData="M44,44 L64,54 L44,64 Z"
+        android:fillColor="#E50914"/>
+
+</vector>

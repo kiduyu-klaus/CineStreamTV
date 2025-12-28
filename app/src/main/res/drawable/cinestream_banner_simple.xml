@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+
+    <!-- Background -->
+    <path
+        android:pathData="M0,0 L320,0 L320,180 L0,180 Z"
+        android:fillColor="#0a0a0a"/>
+
+    <!-- Subtle background texture -->
+    <path
+        android:pathData="M20,0 L100,0 L80,180 L0,180 Z"
+        android:fillColor="#1a1a1a"
+        android:fillAlpha="0.3"/>
+    <path
+        android:pathData="M300,0 L220,0 L240,180 L320,180 Z"
+        android:fillColor="#1a1a1a"
+        android:fillAlpha="0.3"/>
+
+    <!-- Play button circle background -->
+    <path
+        android:pathData="M12,12 a28,28 0 1,0 56,0 a28,28 0 1,0 -56,0"
+        android:fillColor="#000000"
+        android:fillAlpha="0.6"/>
+
+    <!-- Play button triangle -->
+    <path
+        android:pathData="M32,28 L52,40 L32,52 Z"
+        android:fillColor="#E50914"/>
+
+    <!-- Main content area -->
+    <g android:translateX="90" android:translateY="30">
+
+        <!-- App name -->
+        <path
+            android:pathData="M0,0 L0,0 Z"
+            android:fillColor="@android:color/transparent"/>
+        
+        <!-- Text elements (using paths for compatibility) -->
+        <path
+            android:pathData="M0,0 L0,0 Z"
+            android:fillColor="@android:color/transparent"/>
+
+    </g>
+
+    <!-- Corner accents -->
+    <path
+        android:pathData="M280,10 L283,10 L283,13 L280,13 Z"
+        android:fillColor="#E50914"
+        android:fillAlpha="0.8"/>
+
+    <path
+        android:pathData="M280,170 L282,170 L282,172 L280,172 Z"
+        android:fillColor="#E50914"
+        android:fillAlpha="0.6"/>
+
+</vector>

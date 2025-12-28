@@ -1,0 +1,83 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.CineStreamTV" parent="Theme.AppCompat.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/cinema_red</item>
+        <item name="colorPrimaryVariant">@color/cinema_red</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/cinema_red</item>
+        <item name="colorSecondaryVariant">@color/cinema_red</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">@color/charcoal</item>
+        <!-- Customize your theme here. -->
+        <item name="android:windowBackground">@color/charcoal</item>
+        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorSecondary">@color/gray_light</item>
+    </style>
+
+    <!-- Fullscreen theme for player -->
+    <style name="Theme.CineStreamTV.Fullscreen" parent="Theme.CineStreamTV">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+
+    <!-- Button styles -->
+    <style name="CineStreamButton" parent="Widget.AppCompat.Button">
+        <item name="android:background">@color/cinema_red</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:padding">16dp</item>
+    </style>
+
+    <style name="CineStreamButton.Primary">
+        <item name="android:background">@color/cinema_red</item>
+    </style>
+
+    <style name="CineStreamButton.Secondary">
+        <item name="android:background">@color/gray_dark</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <!-- Text styles -->
+    <style name="CineStreamText">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="CineStreamText.Headline" parent="CineStreamText">
+        <item name="android:textSize">28sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="CineStreamText.Title" parent="CineStreamText">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="CineStreamText.Subtitle" parent="CineStreamText">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/gray_light</item>
+    </style>
+
+    <style name="CineStreamText.Body" parent="CineStreamText">
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="CineStreamText.Caption" parent="CineStreamText">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/gray_light</item>
+    </style>
+
+    <!-- Card styles -->
+    <style name="CineStreamCard">
+        <item name="android:background">@color/gray_dark</item>
+        <item name="android:layout_margin">8dp</item>
+        <item name="android:padding">16dp</item>
+    </style>
+
+</resources>
