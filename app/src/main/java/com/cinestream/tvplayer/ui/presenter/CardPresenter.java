@@ -26,13 +26,15 @@ public class CardPresenter extends Presenter {
         if (item instanceof MediaItems) {
             MovieCardViewHolder holder = (MovieCardViewHolder) viewHolder;
             MediaItems mediaItems = (MediaItems) item;
-            
+
             // Set title
             holder.titleView.setText(mediaItems.getTitle());
-            
-            // Load image
+
+            // Load image with placeholder and error handling
             Glide.with(holder.imageView.getContext())
                     .load(mediaItems.getPosterUrl())
+                    .placeholder(R.drawable.placeholder_movie)
+                    .error(R.drawable.placeholder_movie)
                     .centerCrop()
                     .into(holder.imageView);
         }
@@ -49,7 +51,7 @@ public class CardPresenter extends Presenter {
 
         public MovieCardViewHolder(View view) {
             super(view);
-            
+
             imageView = view.findViewById(R.id.imageView);
             titleView = view.findViewById(R.id.titleView);
         }

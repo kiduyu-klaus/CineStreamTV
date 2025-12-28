@@ -28,11 +28,11 @@
         android:theme="@style/Theme.CineStreamTV"
         android:hardwareAccelerated="true"
         tools:targetApi="31">
+
         
         <activity
             android:name=".ui.player.PlayerActivity"
             android:exported="false"
-            android:screenOrientation="landscape"
             android:theme="@style/Theme.CineStreamTV.Fullscreen"
             android:launchMode="singleTop" />
             
