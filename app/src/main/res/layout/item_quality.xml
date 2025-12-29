@@ -1,27 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/selectableItemBackground"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="20dp"
+    android:background="@drawable/dialog_item_selector"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
 
     <TextView
         android:id="@+id/titleTextView"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
         android:text="1080p"
-        android:textColor="@android:color/white"
-        android:textSize="18sp"
+        android:textColor="#FF4A3F5F"
+        android:textSize="24sp"
         android:textStyle="bold" />
 
+    <ImageView
+        android:id="@+id/radioButton"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:src="@drawable/radio_button_unselected" />
+
+    <!-- Hidden subtitle text as not shown in screenshots -->
     <TextView
         android:id="@+id/subtitleTextView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="High Definition (1920x1080)"
-        android:textColor="@color/gray_light"
-        android:textSize="14sp" />
+        android:visibility="gone"
+        android:layout_width="0dp"
+        android:layout_height="0dp" />
 
-</LinearLayout>
+</RelativeLayout>

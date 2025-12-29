@@ -16,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
@@ -57,8 +58,8 @@ public class PlayerActivity extends AppCompatActivity {
     private ImageView playPauseButton;
     private ImageView rewindButton;
     private ImageView fastForwardButton;
-    private ImageView qualityButton;
-    private ImageView subtitleButton;
+    private AppCompatButton qualityButton;
+    private AppCompatButton subtitleButton;
     private TextView currentTimeTextView;
     private TextView totalTimeTextView;
     private SeekBar seekBar;

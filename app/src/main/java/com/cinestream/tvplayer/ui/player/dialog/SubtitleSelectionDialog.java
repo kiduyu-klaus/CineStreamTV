@@ -1,11 +1,20 @@
 package com.cinestream.tvplayer.ui.player.dialog;
 
+import android.app.Dialog;
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -55,6 +64,17 @@ public class SubtitleSelectionDialog extends DialogFragment {
         this.mediaSubtitles = subtitles;
     }
 
+    @NonNull
+    @Override
+    public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+        }
+        return dialog;
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -67,37 +87,27 @@ public class SubtitleSelectionDialog extends DialogFragment {
         return view;
     }
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        // Set dialog properties
-        if (getDialog() != null) {
-            getDialog().setTitle("Select Subtitles");
-        }
-    }
-
     private void initializeViews(View view) {
         subtitleListView = view.findViewById(R.id.subtitleListView);
+
+        ImageView closeButton = view.findViewById(R.id.closeButton);
+        closeButton.setOnClickListener(v -> dismiss());
     }
 
     private void setupList() {
         subtitleItems = new ArrayList<>();
 
-        // Always add "Off" option first
+        // Add "Off" option first
         subtitleItems.add(new SubtitleItem("Off", "off", "No subtitles"));
 
         // Add subtitles from media item if available
         if (mediaSubtitles != null && !mediaSubtitles.isEmpty()) {
             for (MediaItems.SubtitleItem subtitle : mediaSubtitles) {
-                String displayName = getLanguageDisplayName(subtitle.getLang());
-                String description = subtitle.getLanguage() != null ?
-                        subtitle.getLanguage() : displayName + " subtitles";
-
+                String displayName = formatSubtitleName(subtitle);
                 subtitleItems.add(new SubtitleItem(
                         displayName,
                         subtitle.getLang(),
-                        description
+                        subtitle.getLanguage()
                 ));
             }
         }
@@ -107,42 +117,38 @@ public class SubtitleSelectionDialog extends DialogFragment {
             loadAvailableSubtitlesFromPlayer();
         }
 
-        // If no subtitles found, show message
-        if (subtitleItems.size() == 1) {
-            subtitleItems.add(new SubtitleItem(
-                    "No subtitles available",
-                    "none",
-                    "This video has no subtitle tracks"
-            ));
-        }
-
-        subtitleAdapter = new SubtitleAdapter(getContext(), subtitleItems);
+        subtitleAdapter = new SubtitleAdapter(getContext(), subtitleItems, currentSelectedIndex);
         subtitleListView.setAdapter(subtitleAdapter);
 
-        // Highlight current selection
-        if (currentSelectedIndex >= 0 && currentSelectedIndex < subtitleItems.size()) {
-            subtitleListView.setSelection(currentSelectedIndex);
-        }
+        subtitleListView.setSelection(currentSelectedIndex);
+        subtitleListView.requestFocus();
 
         subtitleListView.setOnItemClickListener((parent, view, position, id) -> {
             SubtitleItem selectedSubtitle = subtitleItems.get(position);
-
-            // Don't process the "no subtitles" message
-            if ("none".equals(selectedSubtitle.getValue())) {
-                return;
-            }
-
             currentSelectedIndex = position;
 
             if (listener != null) {
                 listener.onSubtitleSelected(selectedSubtitle);
             }
 
-            // Apply subtitle selection
             applySubtitleSelection(selectedSubtitle);
-
             dismiss();
         });
+    }
+
+    private String formatSubtitleName(MediaItems.SubtitleItem subtitle) {
+        String lang = subtitle.getLang();
+        String language = subtitle.getLanguage();
+
+        // Format: [English] [OpenSubtitles] - Subtitle 1
+        StringBuilder name = new StringBuilder();
+        name.append("[").append(getLanguageDisplayName(lang)).append("]");
+
+        if (language != null && !language.isEmpty()) {
+            name.append(" [").append(language).append("]");
+        }
+
+        return name.toString();
     }
 
     private void loadAvailableSubtitlesFromPlayer() {
@@ -158,7 +164,6 @@ public class SubtitleSelectionDialog extends DialogFragment {
                         if (group.isTrackSupported(i)) {
                             String language = group.getMediaTrackGroup().getFormat(i).language;
                             if (language != null && !language.isEmpty()) {
-                                // Check if this language is already in the list
                                 boolean alreadyExists = false;
                                 for (SubtitleItem item : subtitleItems) {
                                     if (item.getValue().equals(language)) {
@@ -188,7 +193,6 @@ public class SubtitleSelectionDialog extends DialogFragment {
     private String getLanguageDisplayName(String languageCode) {
         if (languageCode == null) return "Unknown";
 
-        // Map common language codes to display names
         switch (languageCode.toLowerCase()) {
             case "en": return "English";
             case "es": return "Spanish";
@@ -202,25 +206,10 @@ public class SubtitleSelectionDialog extends DialogFragment {
             case "ar": return "Arabic";
             case "ru": return "Russian";
             case "hi": return "Hindi";
-            case "nl": return "Dutch";
-            case "sv": return "Swedish";
-            case "no": return "Norwegian";
-            case "da": return "Danish";
-            case "fi": return "Finnish";
-            case "pl": return "Polish";
-            case "tr": return "Turkish";
-            case "th": return "Thai";
-            case "vi": return "Vietnamese";
-            case "id": return "Indonesian";
-            case "ms": return "Malay";
-            case "he": return "Hebrew";
-            case "cs": return "Czech";
-            case "hu": return "Hungarian";
-            case "ro": return "Romanian";
-            case "uk": return "Ukrainian";
             case "el": return "Greek";
+            case "he": return "Hebrew";
+            case "id": return "Indonesia";
             default:
-                // Capitalize first letter
                 return languageCode.substring(0, 1).toUpperCase() +
                         languageCode.substring(1);
         }
@@ -230,14 +219,12 @@ public class SubtitleSelectionDialog extends DialogFragment {
         if (trackSelector != null) {
             try {
                 if ("off".equals(subtitleItem.getValue())) {
-                    // Disable subtitles
                     trackSelector.setParameters(
                             trackSelector.buildUponParameters()
                                     .setPreferredTextLanguage(null)
                                     .setDisabledTextTrackSelectionFlags(C.SELECTION_FLAG_DEFAULT)
                     );
                 } else {
-                    // Enable specific subtitle language
                     trackSelector.setParameters(
                             trackSelector.buildUponParameters()
                                     .setPreferredTextLanguage(subtitleItem.getValue())
@@ -251,9 +238,11 @@ public class SubtitleSelectionDialog extends DialogFragment {
     }
 
     private static class SubtitleAdapter extends ArrayAdapter<SubtitleItem> {
+        private int selectedPosition;
 
-        public SubtitleAdapter(Context context, List<SubtitleItem> items) {
+        public SubtitleAdapter(Context context, List<SubtitleItem> items, int selectedPosition) {
             super(context, R.layout.item_subtitle, items);
+            this.selectedPosition = selectedPosition;
         }
 
         @Override
@@ -265,18 +254,15 @@ public class SubtitleSelectionDialog extends DialogFragment {
             }
 
             TextView titleTextView = convertView.findViewById(R.id.titleTextView);
-            TextView subtitleTextView = convertView.findViewById(R.id.subtitleTextView);
+            ImageView radioButton = convertView.findViewById(R.id.radioButton);
 
             titleTextView.setText(subtitleItem.getTitle());
-            subtitleTextView.setText(subtitleItem.getDescription());
 
-            // Make "no subtitles" item look disabled
-            if ("none".equals(subtitleItem.getValue())) {
-                titleTextView.setAlpha(0.5f);
-                subtitleTextView.setAlpha(0.5f);
+            // Update radio button based on selection
+            if (position == selectedPosition) {
+                radioButton.setImageResource(R.drawable.radio_button_selected);
             } else {
-                titleTextView.setAlpha(1.0f);
-                subtitleTextView.setAlpha(1.0f);
+                radioButton.setImageResource(R.drawable.radio_button_unselected);
             }
 
             return convertView;

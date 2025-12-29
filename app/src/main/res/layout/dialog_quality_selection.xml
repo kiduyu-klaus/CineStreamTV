@@ -1,26 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
+    android:layout_width="800dp"
     android:layout_height="wrap_content"
-    android:background="@color/charcoal"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@drawable/dialog_background"
+    android:padding="32dp">
 
-    <TextView
+    <!-- Header with Title and Close Button -->
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:gravity="center"
-        android:text="Select Quality"
-        android:textColor="@android:color/white"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:layout_marginBottom="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:text="Choose Quality"
+            android:textColor="#FF4A3F5F"
+            android:textSize="32sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/closeButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:src="@drawable/close_button"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:focusable="true"
+            android:focusableInTouchMode="true" />
+
+    </RelativeLayout>
 
     <ListView
         android:id="@+id/qualityListView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:divider="@color/gray_dark"
-        android:dividerHeight="1dp" />
+        android:maxHeight="500dp"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="8dp"
+        android:choiceMode="singleChoice"
+        android:scrollbars="vertical" />
 
 </LinearLayout>

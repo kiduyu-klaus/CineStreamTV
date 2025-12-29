@@ -16,7 +16,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:text="Subtitles"
+            android:text="List Servers"
             android:textColor="#FF4A3F5F"
             android:textSize="32sp"
             android:textStyle="bold" />
@@ -35,7 +35,7 @@
     </RelativeLayout>
 
     <ListView
-        android:id="@+id/subtitleListView"
+        android:id="@+id/serversListView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:maxHeight="500dp"

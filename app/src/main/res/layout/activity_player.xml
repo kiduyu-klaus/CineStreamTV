@@ -26,162 +26,199 @@
         android:focusable="false"
         android:visibility="gone" />
 
-    <!-- Controls Layout -->
+    <!-- Top Bar with Title and Back Button -->
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="24dp"
+        android:gravity="center_vertical"
+        android:background="@drawable/top_bar_gradient">
+
+        <!-- Back Button -->
+        <ImageView
+            android:id="@+id/backButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_back"
+            android:padding="8dp"
+            android:background="@drawable/button_icon_selector"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:nextFocusRight="@id/titleTopTextView"
+            android:nextFocusDown="@id/playPauseButton" />
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/titleTopTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="16dp"
+            android:text="Now You See Me: Now You Don't"
+            android:textColor="@android:color/white"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:focusable="false" />
+
+    </LinearLayout>
+
+    <!-- Bottom Controls Bar -->
     <LinearLayout
         android:id="@+id/controlsLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="#80000000"
         android:orientation="vertical"
-        android:padding="16dp"
-        android:focusable="false"
-        android:descendantFocusability="afterDescendants">
+        android:background="@drawable/controls_gradient"
+        android:paddingTop="32dp"
+        android:paddingBottom="16dp"
+        android:paddingHorizontal="40dp">
 
-        <!-- Progress Bar -->
-        <SeekBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:progressDrawable="@drawable/seekbar_progress"
-            android:thumb="@drawable/seekbar_thumb"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:nextFocusDown="@id/playPauseButton" />
-
-        <!-- Time Display -->
+        <!-- Playback Controls Row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
             android:orientation="horizontal"
-            android:focusable="false">
-
-            <TextView
-                android:id="@+id/currentTimeTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="00:00"
-                android:textColor="@android:color/white"
-                android:textSize="14sp"
-                android:focusable="false" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text=""
-                android:textColor="@android:color/white"
-                android:textSize="14sp"
-                android:focusable="false" />
-
-            <TextView
-                android:id="@+id/totalTimeTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="00:00"
-                android:textColor="@android:color/white"
-                android:textSize="14sp"
-                android:focusable="false" />
-
-        </LinearLayout>
-
-        <!-- Control Buttons -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:focusable="false">
-
-            <!-- Rewind Button -->
-            <ImageView
-                android:id="@+id/rewindButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_margin="8dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:padding="8dp"
-                android:src="@drawable/ic_rewind"
-                android:nextFocusRight="@id/playPauseButton"
-                android:nextFocusUp="@id/progressBar" />
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
 
             <!-- Play/Pause Button -->
             <ImageView
                 android:id="@+id/playPauseButton"
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                android:layout_margin="8dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
+                android:src="@drawable/ic_play_circle"
+                android:background="@drawable/play_pause_selector"
                 android:focusable="true"
                 android:focusableInTouchMode="true"
-                android:padding="8dp"
-                android:src="@drawable/ic_play"
-                android:nextFocusLeft="@id/rewindButton"
-                android:nextFocusRight="@id/fastForwardButton"
-                android:nextFocusUp="@id/progressBar" />
+                android:nextFocusUp="@id/backButton"
+                android:nextFocusRight="@id/currentTimeTextView"
+                android:nextFocusDown="@id/serversButton" />
 
-            <!-- Fast Forward Button -->
-            <ImageView
-                android:id="@+id/fastForwardButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_margin="8dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:padding="8dp"
-                android:src="@drawable/ic_fastforward"
-                android:nextFocusLeft="@id/playPauseButton"
-                android:nextFocusRight="@id/subtitleButton"
-                android:nextFocusUp="@id/progressBar" />
-
-            <!-- Spacer -->
-            <View
-                android:layout_width="32dp"
-                android:layout_height="1dp"
+            <!-- Time Display -->
+            <TextView
+                android:id="@+id/currentTimeTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:text="00:44"
+                android:textColor="@android:color/white"
+                android:textSize="20sp"
                 android:focusable="false" />
 
-            <!-- Settings Buttons -->
-            <ImageView
-                android:id="@+id/subtitleButton"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_margin="8dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
+            <!-- Progress Bar -->
+            <SeekBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="24dp"
+                android:progressDrawable="@drawable/seekbar_progress"
+                android:thumb="@drawable/seekbar_thumb_focused"
                 android:focusable="true"
                 android:focusableInTouchMode="true"
-                android:padding="8dp"
-                android:src="@drawable/ic_subtitles"
-                android:nextFocusLeft="@id/fastForwardButton"
-                android:nextFocusRight="@id/qualityButton"
-                android:nextFocusUp="@id/progressBar" />
+                android:nextFocusLeft="@id/playPauseButton"
+                android:nextFocusDown="@id/serversButton" />
 
-            <ImageView
-                android:id="@+id/qualityButton"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_margin="8dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
+            <!-- Total Time - Hidden as not shown in screenshot -->
+            <TextView
+                android:id="@+id/totalTimeTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:text="00:00"
+                android:textColor="@android:color/white"
+                android:textSize="20sp" />
+
+        </LinearLayout>
+
+        <!-- Bottom Button Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <!-- Servers Button -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/serversButton"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:minWidth="120dp"
+                android:text="Servers"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:textAllCaps="false"
+                android:background="@drawable/bottom_button_selector"
                 android:focusable="true"
                 android:focusableInTouchMode="true"
-                android:padding="8dp"
-                android:src="@drawable/ic_settings"
-                android:nextFocusLeft="@id/subtitleButton"
-                android:nextFocusUp="@id/progressBar" />
+                android:layout_marginEnd="12dp"
+                android:nextFocusUp="@id/playPauseButton"
+                android:nextFocusRight="@id/qualityButton" />
+
+            <!-- Quality Button (shows current quality) -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/qualityButton"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:minWidth="120dp"
+                android:text="1080p"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:textAllCaps="false"
+                android:background="@drawable/bottom_button_selector"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:layout_marginEnd="12dp"
+                android:nextFocusUp="@id/progressBar"
+                android:nextFocusLeft="@id/serversButton"
+                android:nextFocusRight="@id/subtitleButton" />
+
+            <!-- Subtitles Button -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/subtitleButton"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:minWidth="120dp"
+                android:text="CC"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:textAllCaps="false"
+                android:background="@drawable/bottom_button_selector"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:layout_marginEnd="12dp"
+                android:nextFocusUp="@id/progressBar"
+                android:nextFocusLeft="@id/qualityButton"
+                android:nextFocusRight="@id/speedButton" />
+
+            <!-- Speed Button -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/speedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:minWidth="120dp"
+                android:text="Speed"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:textAllCaps="false"
+                android:background="@drawable/bottom_button_selector"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:nextFocusUp="@id/progressBar"
+                android:nextFocusLeft="@id/subtitleButton" />
 
         </LinearLayout>
 
     </LinearLayout>
+
+    <!-- Hidden legacy controls for backward compatibility -->
+    <ImageView android:id="@+id/rewindButton" android:visibility="gone" android:layout_width="0dp" android:layout_height="0dp"/>
+    <ImageView android:id="@+id/fastForwardButton" android:visibility="gone" android:layout_width="0dp" android:layout_height="0dp"/>
 
 </FrameLayout>
