@@ -4,20 +4,18 @@ import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.Connection;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-
 import com.cinestream.tvplayer.data.model.MediaItems;
 
 /**
  * TMDB API Client for fetching movies and TV shows
- * Uses OkHttp with Bearer token authentication
+ * Uses Jsoup for HTTP requests with Bearer token authentication
  */
 public class TMDBApiClient {
     private static final String TAG = "TMDBApiClient";
@@ -31,8 +29,8 @@ public class TMDBApiClient {
     private static final String BACKDROP_SIZE = "w1280";
     private static final String ORIGINAL_SIZE = "original";
 
-    // OkHttp client instance
-    private final OkHttpClient client;
+    // Request timeout in milliseconds
+    private static final int TIMEOUT_MS = 10000;
 
     public enum ContentType {
         MOVIE, TV, ALL
@@ -43,10 +41,10 @@ public class TMDBApiClient {
     }
 
     /**
-     * Constructor initializes OkHttpClient
+     * Constructor
      */
     public TMDBApiClient() {
-        this.client = new OkHttpClient();
+        // No initialization needed for Jsoup
     }
 
     /**
@@ -56,8 +54,9 @@ public class TMDBApiClient {
         List<MediaItems> movies = new ArrayList<>();
 
         try {
-            String url = String.format("%s/movie/popular?language=en-US&page=%d",
+            String url2 = String.format("%s/movie/popular?language=en-US&page=%d",
                     BASE_URL, page);
+            String url ="https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc";
             String response = makeRequest(url);
 
             if (response != null) {
@@ -327,26 +326,23 @@ public class TMDBApiClient {
     }
 
     /**
-     * Make HTTP request to TMDB API using OkHttp
+     * Make HTTP request to TMDB API using Jsoup
      */
     private String makeRequest(String urlString) {
         try {
-            Request request = new Request.Builder()
-                    .url(urlString)
-                    .get()
-                    .addHeader("accept", "application/json")
-                    .addHeader("Authorization", "Bearer " + BEARER_TOKEN)
-                    .build();
+            Connection.Response response = Jsoup.connect(urlString)
+                    .header("accept", "application/json")
+                    .header("Authorization", "Bearer " + BEARER_TOKEN)
+                    .ignoreContentType(true)  // Important: allows Jsoup to fetch JSON
+                    .timeout(TIMEOUT_MS)
+                    .method(Connection.Method.GET)
+                    .execute();
 
-            Response response = client.newCall(request).execute();
-
-            if (response.isSuccessful() && response.body() != null) {
-                String responseBody = response.body().string();
-                response.close();
-                return responseBody;
+            if (response.statusCode() == 200) {
+                return response.body();
             } else {
-                Log.e(TAG, "HTTP Error: " + response.code() + " - " + response.message());
-                response.close();
+                Log.e(TAG, "HTTP Error: " + response.statusCode() + " - " + response.statusMessage());
+                System.out.println("HTTP Error: " + response.statusCode() + " - " + response.statusMessage());
                 return null;
             }
 

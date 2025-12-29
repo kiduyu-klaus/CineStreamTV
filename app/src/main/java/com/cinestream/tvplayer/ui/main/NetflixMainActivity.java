@@ -25,7 +25,6 @@ import com.cinestream.tvplayer.api.TMDBApiClient;
 import com.cinestream.tvplayer.data.model.CategorySection;
 import com.cinestream.tvplayer.data.model.MediaItems;
 import com.cinestream.tvplayer.data.repository.MediaRepository;
-import com.cinestream.tvplayer.data.repository.MediaRepositoryCombined;
 import com.cinestream.tvplayer.data.repository.MediaRepositoryVideasy;
 import com.cinestream.tvplayer.ui.adapter.CategoryAdapter;
 import com.cinestream.tvplayer.ui.adapter.VerticalSpaceItemDecoration;
@@ -38,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NetflixMainActivity extends AppCompatActivity {
+    private static final String TAG = "NetflixMainActivity";
 
     // UI Components
     private ImageView heroBackgroundImage;
@@ -70,12 +70,12 @@ public class NetflixMainActivity extends AppCompatActivity {
     private CategoryAdapter categoryAdapter;
     private MediaRepository mediaRepository;
     private MediaRepositoryVideasy apiRepository;
-    private MediaRepositoryCombined combinedRepository;
     private MediaItems currentSelectedItem;
 
-    // TMDB Loading states
-    private int loadedTMDBCategories = 0;
-    private static final int TOTAL_TMDB_CATEGORIES = 4;
+    // Loading state
+    private boolean isLoadingContent = false;
+    private int loadedCategories = 0;
+    private static final int TOTAL_CATEGORIES = 6; // Featured, Top Rated, Action, Comedy, Drama, Documentaries
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,7 +84,6 @@ public class NetflixMainActivity extends AppCompatActivity {
 
         mediaRepository = new MediaRepository();
         apiRepository = MediaRepositoryVideasy.getInstance();
-        combinedRepository = MediaRepositoryCombined.getInstance();
 
         initializeViews();
         setupClickListeners();
@@ -110,8 +109,8 @@ public class NetflixMainActivity extends AppCompatActivity {
         durationText = findViewById(R.id.durationText);
         qualityBadge = findViewById(R.id.qualityBadge);
         synopsisText = findViewById(R.id.synopsisText);
-        playButton = findViewById(R.id.playButton);
-        moreInfoButton = findViewById(R.id.moreInfoButton);
+        ///playButton = findViewById(R.id.playButton);
+        //moreInfoButton = findViewById(R.id.moreInfoButton);
 
         // Navigation
         navigationSidebar = findViewById(R.id.navigationSidebar);
@@ -120,7 +119,7 @@ public class NetflixMainActivity extends AppCompatActivity {
         categoriesRecyclerView = findViewById(R.id.categoriesRecyclerView);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         categoriesRecyclerView.setLayoutManager(layoutManager);
-        categoriesRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(16));
+        categoriesRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(10));
 
         // Loading
         loadingOverlay = findViewById(R.id.loadingOverlay);
@@ -151,7 +150,7 @@ public class NetflixMainActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        playButton.setOnClickListener(v -> {
+        /*playButton.setOnClickListener(v -> {
             if (currentSelectedItem != null) {
                 if (currentSelectedItem.isFromAPI() || currentSelectedItem.isFromTMDB()) {
                     fetchAndPlay(currentSelectedItem);
@@ -165,7 +164,7 @@ public class NetflixMainActivity extends AppCompatActivity {
             if (currentSelectedItem != null) {
                 launchDetails(currentSelectedItem);
             }
-        });
+        });*/
 
         searchIcon.setOnClickListener(v -> {
             Intent intent = new Intent(NetflixMainActivity.this, SearchActivity.class);
@@ -224,24 +223,203 @@ public class NetflixMainActivity extends AppCompatActivity {
     }
 
     private void loadContent() {
+        if (isLoadingContent) {
+            Log.d(TAG, "Already loading content, skipping duplicate request");
+            return;
+        }
+
+        isLoadingContent = true;
+        loadedCategories = 0;
         loadingOverlay.setVisibility(View.VISIBLE);
-        loadedTMDBCategories = 0;
 
         categories.clear();
 
-        // Add local categories
-        categories.add(new CategorySection("Featured Movies", mediaRepository.getFeaturedMovies()));
-        categories.add(new CategorySection("Action & Adventure", mediaRepository.getActionMovies()));
-        categories.add(new CategorySection("Comedy", mediaRepository.getComedyMovies()));
-        categories.add(new CategorySection("Drama", mediaRepository.getDramaMovies()));
-        categories.add(new CategorySection("Documentaries", mediaRepository.getDocumentaries()));
-        categories.add(new CategorySection("Format Demos", mediaRepository.getFormatDemos()));
+        // Add API content category
         categories.add(new CategorySection("🎆 Live API Content", apiRepository.getAPISampleContent()));
 
-        // Setup adapter
-        categoryAdapter = new CategoryAdapter(categories);
-        categoriesRecyclerView.setAdapter(categoryAdapter);
+        // Setup adapter with initial empty structure
+        if (categoryAdapter == null) {
+            categoryAdapter = new CategoryAdapter(categories);
+            categoriesRecyclerView.setAdapter(categoryAdapter);
+            setupCategoryListeners();
+        } else {
+            categoryAdapter.notifyDataSetChanged();
+        }
 
+        // Load all categories from TMDB asynchronously
+        loadFeaturedMovies();
+        loadTopRatedMovies();
+        loadActionMovies();
+        loadComedyMovies();
+        loadDramaMovies();
+        loadDocumentaries();
+    }
+
+    private void loadFeaturedMovies() {
+        mediaRepository.getFeaturedMoviesAsync(new MediaRepository.TMDBCallback() {
+            @Override
+            public void onSuccess(List<MediaItems> movies) {
+                Log.d(TAG, "Successfully loaded " + movies.size() + " featured movies");
+
+                if (!movies.isEmpty()) {
+                    CategorySection featuredSection = new CategorySection("Featured Movies", movies);
+                    categories.add(0, featuredSection);
+                    categoryAdapter.notifyDataSetChanged();
+
+                    // Update hero content with first featured movie if it's the first category loaded
+                    if (currentSelectedItem == null) {
+                        currentSelectedItem = movies.get(0);
+                        updateHeroContent(currentSelectedItem, 0);
+                    }
+                }
+
+                checkLoadingComplete();
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Failed to load featured movies: " + error);
+                checkLoadingComplete();
+            }
+        });
+    }
+
+    private void loadTopRatedMovies() {
+        mediaRepository.getTopRatedMoviesAsync(new MediaRepository.TMDBCallback() {
+            @Override
+            public void onSuccess(List<MediaItems> movies) {
+                Log.d(TAG, "Successfully loaded " + movies.size() + " top rated movies");
+
+                if (!movies.isEmpty()) {
+                    CategorySection section = new CategorySection("Top Rated Movies", movies);
+                    categories.add(section);
+                    categoryAdapter.notifyDataSetChanged();
+                }
+
+                checkLoadingComplete();
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Failed to load top rated movies: " + error);
+                checkLoadingComplete();
+            }
+        });
+    }
+
+    private void loadActionMovies() {
+        mediaRepository.getActionMoviesAsync(new MediaRepository.TMDBCallback() {
+            @Override
+            public void onSuccess(List<MediaItems> movies) {
+                Log.d(TAG, "Successfully loaded " + movies.size() + " action movies");
+
+                if (!movies.isEmpty()) {
+                    CategorySection section = new CategorySection("Action & Adventure", movies);
+                    categories.add(section);
+                    categoryAdapter.notifyDataSetChanged();
+                }
+
+                checkLoadingComplete();
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Failed to load action movies: " + error);
+                checkLoadingComplete();
+            }
+        });
+    }
+
+    private void loadComedyMovies() {
+        mediaRepository.getComedyMoviesAsync(new MediaRepository.TMDBCallback() {
+            @Override
+            public void onSuccess(List<MediaItems> movies) {
+                Log.d(TAG, "Successfully loaded " + movies.size() + " comedy movies");
+
+                if (!movies.isEmpty()) {
+                    CategorySection section = new CategorySection("Comedy", movies);
+                    categories.add(section);
+                    categoryAdapter.notifyDataSetChanged();
+                }
+
+                checkLoadingComplete();
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Failed to load comedy movies: " + error);
+                checkLoadingComplete();
+            }
+        });
+    }
+
+    private void loadDramaMovies() {
+        mediaRepository.getDramaMoviesAsync(new MediaRepository.TMDBCallback() {
+            @Override
+            public void onSuccess(List<MediaItems> movies) {
+                Log.d(TAG, "Successfully loaded " + movies.size() + " drama movies");
+
+                if (!movies.isEmpty()) {
+                    CategorySection section = new CategorySection("Drama", movies);
+                    categories.add(section);
+                    categoryAdapter.notifyDataSetChanged();
+                }
+
+                checkLoadingComplete();
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Failed to load drama movies: " + error);
+                checkLoadingComplete();
+            }
+        });
+    }
+
+    private void loadDocumentaries() {
+        mediaRepository.getDocumentariesAsync(new MediaRepository.TMDBCallback() {
+            @Override
+            public void onSuccess(List<MediaItems> movies) {
+                Log.d(TAG, "Successfully loaded " + movies.size() + " documentaries");
+
+                if (!movies.isEmpty()) {
+                    CategorySection section = new CategorySection("Documentaries", movies);
+                    categories.add(section);
+                    categoryAdapter.notifyDataSetChanged();
+                }
+
+                checkLoadingComplete();
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Failed to load documentaries: " + error);
+                checkLoadingComplete();
+            }
+        });
+    }
+
+    private void checkLoadingComplete() {
+        loadedCategories++;
+
+        if (loadedCategories >= TOTAL_CATEGORIES) {
+            loadingOverlay.setVisibility(View.GONE);
+            isLoadingContent = false;
+
+            // If no hero content set yet, set from first available category
+            if (currentSelectedItem == null && !categories.isEmpty()) {
+                for (CategorySection section : categories) {
+                    if (!section.getItems().isEmpty()) {
+                        currentSelectedItem = section.getItems().get(0);
+                        updateHeroContent(currentSelectedItem, 0);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private void setupCategoryListeners() {
         categoryAdapter.setOnItemClickListener(new CategoryAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(MediaItems mediaItems, int categoryPosition, int itemPosition) {
@@ -258,99 +436,6 @@ public class NetflixMainActivity extends AppCompatActivity {
                 }
             }
         });
-
-        // Load TMDB content
-        loadTMDBContent();
-
-        // Set initial hero content
-        if (!categories.isEmpty() && !categories.get(0).getItems().isEmpty()) {
-            currentSelectedItem = categories.get(0).getItems().get(0);
-            updateHeroContent(currentSelectedItem, 0);
-        }
-
-        loadingOverlay.setVisibility(View.GONE);
-    }
-
-    private void loadTMDBContent() {
-        Log.d(TAG, "Loading TMDB content...");
-
-        // Popular Movies
-        combinedRepository.getPopularMovies(1, new MediaRepositoryCombined.CombinedCallback<List<MediaItems>>() {
-            @Override
-            public void onSuccess(List<MediaItems> movies) {
-                Log.d(TAG, "Loaded " + movies.size() + " popular movies");
-                categories.add(new CategorySection("🎬 Popular Movies", movies));
-                categoryAdapter.notifyDataSetChanged();
-                checkTMDBLoadingComplete();
-            }
-
-            @Override
-            public void onError(String error) {
-                Log.e(TAG, "Error loading popular movies: " + error);
-                checkTMDBLoadingComplete();
-            }
-        });
-
-        // Popular TV Shows
-        combinedRepository.getPopularTVShows(1, new MediaRepositoryCombined.CombinedCallback<List<MediaItems>>() {
-            @Override
-            public void onSuccess(List<MediaItems> tvShows) {
-                Log.d(TAG, "Loaded " + tvShows.size() + " popular TV shows");
-                categories.add(new CategorySection("📺 Popular TV Shows", tvShows));
-                categoryAdapter.notifyDataSetChanged();
-                checkTMDBLoadingComplete();
-            }
-
-            @Override
-            public void onError(String error) {
-                Log.e(TAG, "Error loading popular TV shows: " + error);
-                checkTMDBLoadingComplete();
-            }
-        });
-
-        // Top Rated Movies
-        combinedRepository.getTopRatedMovies(1, new MediaRepositoryCombined.CombinedCallback<List<MediaItems>>() {
-            @Override
-            public void onSuccess(List<MediaItems> movies) {
-                Log.d(TAG, "Loaded " + movies.size() + " top rated movies");
-                categories.add(new CategorySection("⭐ Top Rated Movies", movies));
-                categoryAdapter.notifyDataSetChanged();
-                checkTMDBLoadingComplete();
-            }
-
-            @Override
-            public void onError(String error) {
-                Log.e(TAG, "Error loading top rated movies: " + error);
-                checkTMDBLoadingComplete();
-            }
-        });
-
-        // Trending
-        combinedRepository.getTrending(TMDBApiClient.ContentType.ALL, TMDBApiClient.TimeWindow.DAY,
-                new MediaRepositoryCombined.CombinedCallback<List<MediaItems>>() {
-                    @Override
-                    public void onSuccess(List<MediaItems> trending) {
-                        Log.d(TAG, "Loaded " + trending.size() + " trending items");
-                        categories.add(new CategorySection("🔥 Trending Now", trending));
-                        categoryAdapter.notifyDataSetChanged();
-                        checkTMDBLoadingComplete();
-                    }
-
-                    @Override
-                    public void onError(String error) {
-                        Log.e(TAG, "Error loading trending: " + error);
-                        checkTMDBLoadingComplete();
-                    }
-                });
-    }
-
-    private void checkTMDBLoadingComplete() {
-        loadedTMDBCategories++;
-        Log.d(TAG, "TMDB loaded: " + loadedTMDBCategories + "/" + TOTAL_TMDB_CATEGORIES);
-
-        if (loadedTMDBCategories >= TOTAL_TMDB_CATEGORIES) {
-            Log.d(TAG, "All TMDB content loaded. Total categories: " + categories.size());
-        }
     }
 
     private void updateHeroContent(MediaItems mediaItems, int categoryPosition) {
@@ -375,82 +460,18 @@ public class NetflixMainActivity extends AppCompatActivity {
 
         if (mediaItems.isFromAPI() || mediaItems.isFromTMDB()) {
             nSeriesBadge.setVisibility(View.VISIBLE);
-            nSeriesBadge.setText(mediaItems.isFromTMDB() ? "TMDB" : "N Series");
+            //nSeriesBadge.setText(mediaItems.isFromTMDB() ? "TMDB" : "N Series");
+            nSeriesBadge.setText(categories.get(categoryPosition).getCategoryName());
         } else {
             nSeriesBadge.setVisibility(View.GONE);
         }
 
-        playButton.setEnabled(true);
-        moreInfoButton.setEnabled(true);
+        //playButton.setEnabled(true);
+       // moreInfoButton.setEnabled(true);
     }
 
-    private void fetchAndPlay(MediaItems mediaItems) {
-        loadingOverlay.setVisibility(View.VISIBLE);
-        playButton.setEnabled(false);
-        moreInfoButton.setEnabled(false);
 
-        if (mediaItems.isFromTMDB()) {
-            combinedRepository.fetchStreamingSources(mediaItems,
-                    new MediaRepositoryCombined.CombinedCallback<MediaItems>() {
-                        @Override
-                        public void onSuccess(MediaItems result) {
-                            loadingOverlay.setVisibility(View.GONE);
-                            if (result.hasValidVideoSources()) {
-                                launchPlayer(result);
-                            } else {
-                                Toast.makeText(NetflixMainActivity.this,
-                                        "Streaming sources not available",
-                                        Toast.LENGTH_LONG).show();
-                                playButton.setEnabled(true);
-                                moreInfoButton.setEnabled(true);
-                            }
-                        }
 
-                        @Override
-                        public void onError(String error) {
-                            loadingOverlay.setVisibility(View.GONE);
-                            playButton.setEnabled(true);
-                            moreInfoButton.setEnabled(true);
-                            Toast.makeText(NetflixMainActivity.this,
-                                    "Failed to load: " + error,
-                                    Toast.LENGTH_LONG).show();
-                        }
-                    });
-        } else {
-            apiRepository.fetchVideoSources(
-                    mediaItems.getTitle(),
-                    mediaItems.getMediaType(),
-                    String.valueOf(mediaItems.getYear()),
-                    mediaItems.getTmdbId(),
-                    mediaItems.getSeason(),
-                    mediaItems.getEpisode(),
-                    new MediaRepositoryVideasy.ApiCallback<MediaItems>() {
-                        @Override
-                        public void onSuccess(MediaItems result) {
-                            loadingOverlay.setVisibility(View.GONE);
-                            launchPlayer(result);
-                        }
-
-                        @Override
-                        public void onError(String error) {
-                            loadingOverlay.setVisibility(View.GONE);
-                            playButton.setEnabled(true);
-                            moreInfoButton.setEnabled(true);
-                            Toast.makeText(NetflixMainActivity.this,
-                                    "Failed to load: " + error,
-                                    Toast.LENGTH_LONG).show();
-                        }
-                    }
-            );
-        }
-    }
-
-    @OptIn(markerClass = UnstableApi.class)
-    private void launchPlayer(MediaItems mediaItems) {
-        Intent intent = new Intent(this, PlayerActivity.class);
-        intent.putExtra("media_item", mediaItems);
-        startActivity(intent);
-    }
 
     private void launchDetails(MediaItems mediaItems) {
         Intent intent = new Intent(this, DetailsActivity.class);
@@ -461,7 +482,10 @@ public class NetflixMainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        loadContent();
+        // Only reload if not currently loading
+        if (!isLoadingContent) {
+            loadContent();
+        }
     }
 
     @Override
@@ -473,7 +497,8 @@ public class NetflixMainActivity extends AppCompatActivity {
         if (combinedRepository != null) {
             combinedRepository.cleanup();
         }
+        if (mediaRepository != null) {
+            mediaRepository.cleanup();
+        }
     }
-
-    private static final String TAG = "NetflixMainActivity";
 }

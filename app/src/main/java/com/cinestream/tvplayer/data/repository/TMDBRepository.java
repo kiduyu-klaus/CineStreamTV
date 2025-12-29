@@ -115,8 +115,10 @@ public class TMDBRepository {
                 List<MediaItems> tvShows = tmdbApiClient.getPopularTVShows(page);
                 
                 // Cache the result
-                cacheResponse(cacheKey, tvShows);
-                
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    cacheResponse(cacheKey, tvShows);
+                }
+
                 mainHandler.post(() -> callback.onSuccess(tvShows));
             } catch (Exception e) {
                 Log.e(TAG, "Error fetching popular TV shows", e);
