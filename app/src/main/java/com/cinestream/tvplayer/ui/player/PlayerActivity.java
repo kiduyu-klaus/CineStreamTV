@@ -168,10 +168,23 @@ public class PlayerActivity extends AppCompatActivity {
         qualityButton.setOnClickListener(v -> showQualityDialog());
         subtitleButton.setOnClickListener(v -> showSubtitleDialog());
 
-        // Add focus change listeners to show controls when navigating
+        // Add focus change listeners to show controls and animate when navigating
         View.OnFocusChangeListener focusListener = (v, hasFocus) -> {
             if (hasFocus) {
                 showControls();
+                // Scale up animation
+                v.animate()
+                        .scaleX(1.1f)
+                        .scaleY(1.1f)
+                        .setDuration(150)
+                        .start();
+            } else {
+                // Scale down animation
+                v.animate()
+                        .scaleX(1.0f)
+                        .scaleY(1.0f)
+                        .setDuration(150)
+                        .start();
             }
         };
 
@@ -368,7 +381,7 @@ public class PlayerActivity extends AppCompatActivity {
 
     private void rewind() {
         if (player != null) {
-            player.seekTo(Math.max(0, player.getCurrentPosition() - 10000)); // 10 seconds back
+            player.seekTo(Math.max(0, player.getCurrentPosition() - 30000)); // 30 seconds back
             showControls();
         }
     }
@@ -377,7 +390,7 @@ public class PlayerActivity extends AppCompatActivity {
         if (player != null) {
             long duration = player.getDuration();
             if (duration != C.TIME_UNSET) {
-                long newPosition = Math.min(duration, player.getCurrentPosition() + 10000); // 10 seconds forward
+                long newPosition = Math.min(duration, player.getCurrentPosition() + 30000); // 30 seconds forward
                 player.seekTo(newPosition);
             }
             showControls();
@@ -386,14 +399,26 @@ public class PlayerActivity extends AppCompatActivity {
 
     private void showQualityDialog() {
         if (player != null && trackSelector != null) {
-            qualityDialog.setTrackSelector(trackSelector);
+            qualityDialog.setTrackSelector(trackSelector, player);
+
+            // Pass video sources from media item if available
+            if (sourceMediaItem != null && sourceMediaItem.getVideoSources() != null) {
+                qualityDialog.setVideoSources(sourceMediaItem.getVideoSources());
+            }
+
             qualityDialog.show(getSupportFragmentManager(), "quality_dialog");
         }
     }
 
     private void showSubtitleDialog() {
         if (player != null && trackSelector != null) {
-            subtitleDialog.setTrackSelector(trackSelector);
+            subtitleDialog.setTrackSelector(trackSelector, player);
+
+            // Pass subtitles from media item if available
+            if (sourceMediaItem != null && sourceMediaItem.getSubtitles() != null) {
+                subtitleDialog.setMediaSubtitles(sourceMediaItem.getSubtitles());
+            }
+
             subtitleDialog.show(getSupportFragmentManager(), "subtitle_dialog");
         }
     }
