@@ -36,7 +36,7 @@
         android:padding="16dp">
 
         <!-- Progress Bar -->
-        <ProgressBar
+        <SeekBar
             android:id="@+id/progressBar"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"

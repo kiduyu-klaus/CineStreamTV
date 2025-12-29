@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -20,7 +19,6 @@ import com.bumptech.glide.Glide;
 import com.cinestream.tvplayer.R;
 import com.cinestream.tvplayer.data.model.MediaItems;
 import com.cinestream.tvplayer.data.repository.MediaRepository;
-import com.cinestream.tvplayer.data.repository.MediaRepositoryVideasy;
 import com.cinestream.tvplayer.ui.adapter.RecommendationsAdapter;
 import com.cinestream.tvplayer.ui.player.PlayerActivity;
 
@@ -55,7 +53,6 @@ public class DetailsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_details);
 
-        // Get media item from intent
         mediaItems = getIntent().getParcelableExtra("media_item");
 
         if (mediaItems == null) {
@@ -93,7 +90,6 @@ public class DetailsActivity extends AppCompatActivity {
     }
 
     private void setupViews() {
-        // Load backdrop image with gradient overlay
         if (mediaItems.getBackgroundImageUrl() != null) {
             Glide.with(this)
                     .load(mediaItems.getBackgroundImageUrl())
@@ -101,38 +97,32 @@ public class DetailsActivity extends AppCompatActivity {
                     .into(backdropImageView);
         }
 
-        // Load poster image
         Glide.with(this)
                 .load(mediaItems.getPosterUrl())
                 .centerCrop()
                 .into(posterImageView);
 
-        // Set text content
         titleTextView.setText(mediaItems.getTitle());
         descriptionTextView.setText(mediaItems.getDescription());
 
-        // Year
         if (mediaItems.getYear() > 0) {
             yearTextView.setText(String.valueOf(mediaItems.getYear()));
         } else {
             yearTextView.setVisibility(View.GONE);
         }
 
-        // Rating with TMDb style
         if (mediaItems.getRating() > 0) {
             ratingTextView.setText(String.format("%.1f", mediaItems.getRating()));
         } else {
             ratingTextView.setVisibility(View.GONE);
         }
 
-        // Duration
         if (mediaItems.getDuration() != null && !mediaItems.getDuration().isEmpty()) {
             durationTextView.setText(mediaItems.getDuration());
         } else {
             durationTextView.setVisibility(View.GONE);
         }
 
-        // Genres as text
         if (mediaItems.getGenres() != null && !mediaItems.getGenres().isEmpty()) {
             genresTextView.setText(String.join(" • ", mediaItems.getGenres()));
         } else if (mediaItems.getGenre() != null && !mediaItems.getGenre().isEmpty()) {
@@ -141,10 +131,7 @@ public class DetailsActivity extends AppCompatActivity {
             genresTextView.setVisibility(View.GONE);
         }
 
-        // Creators/Directors (placeholder - would need to fetch from TMDB details)
         creatorsTextView.setText("Loading...");
-
-        // Stars/Cast (placeholder - would need to fetch from TMDB details)
         starsTextView.setText("Loading...");
     }
 
@@ -153,7 +140,6 @@ public class DetailsActivity extends AppCompatActivity {
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         );
         recommendationsAdapter = new RecommendationsAdapter(this, item -> {
-            // Handle recommendation click - open new details activity
             Intent intent = new Intent(DetailsActivity.this, DetailsActivity.class);
             intent.putExtra("media_item", item);
             startActivity(intent);
@@ -199,39 +185,115 @@ public class DetailsActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        playButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Check if this is API content
-                    // Show loading and fetch video sources
-                    fetchVideoSources();
+        playButton.setOnClickListener(v -> {
+            // Check if we need to fetch video sources
+                fetchVideoSources();
 
-            }
         });
 
-        favoriteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Toggle favorite status
-                Toast.makeText(DetailsActivity.this,
-                        "Added to favorites",
-                        Toast.LENGTH_SHORT).show();
-            }
+        favoriteButton.setOnClickListener(v -> {
+            Toast.makeText(DetailsActivity.this,
+                    "Added to favorites",
+                    Toast.LENGTH_SHORT).show();
         });
     }
 
     private void fetchVideoSources() {
-        // Show loading overlay
         loadingOverlay.setVisibility(View.VISIBLE);
         playButton.setEnabled(false);
 
-        // Fetch video sources from API
+        String title = mediaItems.getTitle();
+        String year = String.valueOf(mediaItems.getYear());
+        String tmdbId = mediaItems.getTmdbId();
+        String mediaType = mediaItems.getMediaType();
 
+        Log.d(TAG, "Fetching video sources for: " + title + " (" + year + ") [" + tmdbId + "]");
+        Log.i(TAG, "fetchVideoSources: "+ title + " (" + year + ") [" + tmdbId + "]");
+
+        if ("TV".equals(mediaType)) {
+            // For TV shows - you'll need season/episode data
+            String season = mediaItems.getSeason() != null ? mediaItems.getSeason() : "1";
+            String episode = mediaItems.getEpisode() != null ? mediaItems.getEpisode() : "1";
+
+            mediaRepository.fetchVideasyStreamsTV(title, year, tmdbId, season, episode,
+                    new MediaRepository.VideasyCallback() {
+                        @Override
+                        public void onSuccess(MediaItems updatedItem) {
+                            loadingOverlay.setVisibility(View.GONE);
+                            playButton.setEnabled(true);
+
+                            // Update current media item with video sources
+                            mediaItems.setVideoSources(updatedItem.getVideoSources());
+                            mediaItems.setSubtitles(updatedItem.getSubtitles());
+
+                            Log.i(TAG, "Video sources fetched: " +
+                                    mediaItems.getVideoSources().size());
+
+                            launchPlayer();
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            loadingOverlay.setVisibility(View.GONE);
+                            playButton.setEnabled(true);
+
+                            Toast.makeText(DetailsActivity.this,
+                                    "Failed to fetch video sources: " + error,
+                                    Toast.LENGTH_LONG).show();
+
+                            Log.e(TAG, "Error fetching video sources: " + error);
+                        }
+                    });
+        } else {
+            // For movies
+            mediaRepository.fetchVideasyStreamsMovie(title, year, tmdbId,
+                    new MediaRepository.VideasyCallback() {
+                        @Override
+                        public void onSuccess(MediaItems updatedItem) {
+                            loadingOverlay.setVisibility(View.GONE);
+                            playButton.setEnabled(true);
+
+                            // Update current media item with video sources
+                            mediaItems.setVideoSources(updatedItem.getVideoSources());
+                            mediaItems.setSubtitles(updatedItem.getSubtitles());
+
+                            Log.d(TAG, "Video sources fetched: " +
+                                    mediaItems.getVideoSources().size());
+
+                            launchPlayer();
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            loadingOverlay.setVisibility(View.GONE);
+                            playButton.setEnabled(true);
+
+                            Toast.makeText(DetailsActivity.this,
+                                    "Failed to fetch video sources: " + error,
+                                    Toast.LENGTH_LONG).show();
+
+                            Log.e(TAG, "Error fetching video sources: " + error);
+                        }
+                    });
+        }
     }
 
     private void launchPlayer() {
+        if (!mediaItems.hasValidVideoSources()) {
+            Toast.makeText(this, "No video sources available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         Intent intent = new Intent(this, PlayerActivity.class);
         intent.putExtra("media_item", mediaItems);
         startActivity(intent);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mediaRepository != null) {
+            mediaRepository.cleanup();
+        }
     }
 }

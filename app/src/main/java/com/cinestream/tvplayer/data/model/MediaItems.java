@@ -408,8 +408,8 @@ public class MediaItems implements Parcelable {
         dest.writeList(subtitles);
     }
 
-    // Static classes to match VideasyAPI structure
-    public static class VideoSource {
+
+    public static class VideoSource implements Parcelable {
         private String quality;
         private String url;
 
@@ -419,6 +419,23 @@ public class MediaItems implements Parcelable {
             this.quality = quality;
             this.url = url;
         }
+
+        protected VideoSource(Parcel in) {
+            quality = in.readString();
+            url = in.readString();
+        }
+
+        public static final Creator<VideoSource> CREATOR = new Creator<VideoSource>() {
+            @Override
+            public VideoSource createFromParcel(Parcel in) {
+                return new VideoSource(in);
+            }
+
+            @Override
+            public VideoSource[] newArray(int size) {
+                return new VideoSource[size];
+            }
+        };
 
         public String getQuality() {
             return quality;
@@ -435,9 +452,20 @@ public class MediaItems implements Parcelable {
         public void setUrl(String url) {
             this.url = url;
         }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeString(quality);
+            dest.writeString(url);
+        }
     }
 
-    public static class SubtitleItem {
+    public static class SubtitleItem implements Parcelable {
         private String url;
         private String lang;
         private String language;
@@ -449,6 +477,24 @@ public class MediaItems implements Parcelable {
             this.lang = lang;
             this.language = language;
         }
+
+        protected SubtitleItem(Parcel in) {
+            url = in.readString();
+            lang = in.readString();
+            language = in.readString();
+        }
+
+        public static final Creator<SubtitleItem> CREATOR = new Creator<SubtitleItem>() {
+            @Override
+            public SubtitleItem createFromParcel(Parcel in) {
+                return new SubtitleItem(in);
+            }
+
+            @Override
+            public SubtitleItem[] newArray(int size) {
+                return new SubtitleItem[size];
+            }
+        };
 
         public String getUrl() {
             return url;
@@ -472,6 +518,18 @@ public class MediaItems implements Parcelable {
 
         public void setLanguage(String language) {
             this.language = language;
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeString(url);
+            dest.writeString(lang);
+            dest.writeString(language);
         }
     }
 }

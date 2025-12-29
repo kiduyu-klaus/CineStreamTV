@@ -14,22 +14,23 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MediaRepository {
-    private static final String TAG = "TMDBRepository";
+    private static final String TAG = "MediaRepository";
     private static final String IMAGE_BASE_URL = "https://image.tmdb.org/t/p/";
     private static final String TMDB_BASE_URL = "https://api.themoviedb.org/3";
+    private static final String VIDEASY_API_BASE = "https://api.videasy.net";
+    private static final String DECRYPT_API = "https://enc-dec.app/api/dec-videasy";
+    private static final String BEARER_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0MTAzZmMzMDY1YzEyMmViNWRiNmJkY2ZmNzQ5ZmRlNyIsIm5iZiI6MTY2ODA2NDAzNC4yNDk5OTk4LCJzdWIiOiI2MzZjYTMyMjA0OTlmMjAwN2ZlYjA4MWEiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.tjvtYPTPfLOyMdOouQ14GGgOzmfnZRW4RgvOzfoq19w";
 
-    // Image sizes
     private static final String POSTER_SIZE = "w500";
     private static final String BACKDROP_SIZE = "w1280";
     private static final String ORIGINAL_SIZE = "original";
-    private static final String BEARER_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0MTAzZmMzMDY1YzEyMmViNWRiNmJkY2ZmNzQ5ZmRlNyIsIm5iZiI6MTY2ODA2NDAzNC4yNDk5OTk4LCJzdWIiOiI2MzZjYTMyMjA0OTlmMjAwN2ZlYjA4MWEiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.tjvtYPTPfLOyMdOouQ14GGgOzmfnZRW4RgvOzfoq19w";
-
     private static final int TIMEOUT_MS = 10000;
     private static MediaRepository instance;
 
@@ -417,6 +418,225 @@ public class MediaRepository {
         }
 
         return mediaItems;
+    }
+
+    // Callback interface for video sources
+    public interface VideasyCallback {
+        void onSuccess(MediaItems updatedMediaItem);
+        void onError(String error);
+    }
+
+    /**
+     * Fetch Videasy streams for a movie
+     * @param title Movie title
+     * @param year Release year
+     * @param tmdbId TMDB ID
+     * @param callback Callback to return updated MediaItems with video sources
+     */
+    public void fetchVideasyStreamsMovie(String title, String year, String tmdbId, VideasyCallback callback) {
+        executorService.execute(() -> {
+            try {
+                // Step 1: Get encrypted data from Videasy API
+                String encodedTitle = URLEncoder.encode(title, "UTF-8");
+                String videasyUrl = String.format(
+                        "%s/1movies/sources-with-title?title=%s&mediaType=movie&year=%s&tmdbId=%s",
+                        VIDEASY_API_BASE, encodedTitle, year, tmdbId
+                );
+
+                Log.d(TAG, "Fetching from Videasy: " + videasyUrl);
+
+                Connection.Response encResponse = Jsoup.connect(videasyUrl)
+                        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                        .header("Connection", "keep-alive")
+                        .ignoreContentType(true)
+                        .timeout(TIMEOUT_MS)
+                        .method(Connection.Method.GET)
+                        .execute();
+
+                if (encResponse.statusCode() != 200) {
+                    throw new IOException("Videasy API returned status: " + encResponse.statusCode());
+                }
+
+                String encryptedData = encResponse.body();
+                Log.d(TAG, "Encrypted data received");
+
+                // Step 2: Decrypt the data
+                JSONObject decryptPayload = new JSONObject();
+                decryptPayload.put("text", encryptedData);
+                decryptPayload.put("id", tmdbId);
+
+                Connection.Response decResponse = Jsoup.connect(DECRYPT_API)
+                        .header("Content-Type", "application/json")
+                        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                        .ignoreContentType(true)
+                        .requestBody(decryptPayload.toString())
+                        .timeout(TIMEOUT_MS)
+                        .method(Connection.Method.POST)
+                        .execute();
+
+                if (decResponse.statusCode() != 200) {
+                    throw new IOException("Decrypt API returned status: " + decResponse.statusCode());
+                }
+
+                JSONObject decryptedResponse = new JSONObject(decResponse.body());
+                String decryptedDataStr = decryptedResponse.getString("result");
+
+                Log.d(TAG, "Decrypted data: " + decryptedDataStr);
+
+                // Step 3: Parse the decrypted JSON
+                JSONObject streamData = new JSONObject(decryptedDataStr);
+
+                List<MediaItems.VideoSource> videoSources = new ArrayList<>();
+                List<MediaItems.SubtitleItem> subtitles = new ArrayList<>();
+
+                // Parse video sources
+                if (streamData.has("sources")) {
+                    JSONArray sourcesArray = streamData.getJSONArray("sources");
+                    for (int i = 0; i < sourcesArray.length(); i++) {
+                        JSONObject sourceObj = sourcesArray.getJSONObject(i);
+                        String quality = sourceObj.optString("quality", "Unknown");
+                        String url = sourceObj.optString("url", "");
+
+                        if (!url.isEmpty()) {
+                            videoSources.add(new MediaItems.VideoSource(quality, url));
+                            Log.d(TAG, "Added source: " + quality + " - " + url);
+                        }
+                    }
+                }
+
+                // Parse subtitles
+                if (streamData.has("subtitles")) {
+                    JSONArray subtitlesArray = streamData.getJSONArray("subtitles");
+                    for (int i = 0; i < subtitlesArray.length(); i++) {
+                        JSONObject subObj = subtitlesArray.getJSONObject(i);
+                        String url = subObj.optString("url", "");
+                        String lang = subObj.optString("lang", "Unknown");
+                        String language = subObj.optString("language", lang);
+
+                        if (!url.isEmpty()) {
+                            subtitles.add(new MediaItems.SubtitleItem(url, lang, language));
+                        }
+                    }
+                }
+
+                // Create updated MediaItems with video sources
+                MediaItems updatedItem = new MediaItems();
+                updatedItem.setVideoSources(videoSources);
+                updatedItem.setSubtitles(subtitles);
+
+                Log.d(TAG, "Successfully fetched " + videoSources.size() + " video sources and " +
+                        subtitles.size() + " subtitles");
+
+                // Return on main thread
+                mainHandler.post(() -> callback.onSuccess(updatedItem));
+
+            } catch (Exception e) {
+                Log.e(TAG, "Error fetching Videasy streams", e);
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    /**
+     * Fetch Videasy streams for a TV show episode
+     * @param title Show title
+     * @param year Release year
+     * @param tmdbId TMDB ID
+     * @param season Season number
+     * @param episode Episode number
+     * @param callback Callback to return updated MediaItems with video sources
+     */
+    public void fetchVideasyStreamsTV(String title, String year, String tmdbId,
+                                      String season, String episode, VideasyCallback callback) {
+        executorService.execute(() -> {
+            try {
+                String encodedTitle = URLEncoder.encode(title, "UTF-8");
+                String videasyUrl = String.format(
+                        "%s/myflixerzupcloud/sources-with-title?title=%s&mediaType=tv&year=%s&tmdbId=%s&seasonId=%s&episodeId=%s",
+                        VIDEASY_API_BASE, encodedTitle, year, tmdbId, season, episode
+                );
+
+                Log.d(TAG, "Fetching TV from Videasy: " + videasyUrl);
+
+                Connection.Response encResponse = Jsoup.connect(videasyUrl)
+                        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                        .header("Connection", "keep-alive")
+                        .ignoreContentType(true)
+                        .timeout(TIMEOUT_MS)
+                        .method(Connection.Method.GET)
+                        .execute();
+
+                if (encResponse.statusCode() != 200) {
+                    throw new IOException("Videasy API returned status: " + encResponse.statusCode());
+                }
+
+                String encryptedData = encResponse.body();
+
+                // Decrypt
+                JSONObject decryptPayload = new JSONObject();
+                decryptPayload.put("text", encryptedData);
+                decryptPayload.put("id", tmdbId);
+
+                Connection.Response decResponse = Jsoup.connect(DECRYPT_API)
+                        .header("Content-Type", "application/json")
+                        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                        .ignoreContentType(true)
+                        .requestBody(decryptPayload.toString())
+                        .timeout(TIMEOUT_MS)
+                        .method(Connection.Method.POST)
+                        .execute();
+
+                if (decResponse.statusCode() != 200) {
+                    throw new IOException("Decrypt API returned status: " + decResponse.statusCode());
+                }
+
+                JSONObject decryptedResponse = new JSONObject(decResponse.body());
+                String decryptedDataStr = decryptedResponse.getString("result");
+
+                JSONObject streamData = new JSONObject(decryptedDataStr);
+
+                List<MediaItems.VideoSource> videoSources = new ArrayList<>();
+                List<MediaItems.SubtitleItem> subtitles = new ArrayList<>();
+
+                // Parse sources and subtitles (same as movie)
+                if (streamData.has("sources")) {
+                    JSONArray sourcesArray = streamData.getJSONArray("sources");
+                    for (int i = 0; i < sourcesArray.length(); i++) {
+                        JSONObject sourceObj = sourcesArray.getJSONObject(i);
+                        String quality = sourceObj.optString("quality", "Unknown");
+                        String url = sourceObj.optString("url", "");
+
+                        if (!url.isEmpty()) {
+                            videoSources.add(new MediaItems.VideoSource(quality, url));
+                        }
+                    }
+                }
+
+                if (streamData.has("subtitles")) {
+                    JSONArray subtitlesArray = streamData.getJSONArray("subtitles");
+                    for (int i = 0; i < subtitlesArray.length(); i++) {
+                        JSONObject subObj = subtitlesArray.getJSONObject(i);
+                        String url = subObj.optString("url", "");
+                        String lang = subObj.optString("lang", "Unknown");
+                        String language = subObj.optString("language", lang);
+
+                        if (!url.isEmpty()) {
+                            subtitles.add(new MediaItems.SubtitleItem(url, lang, language));
+                        }
+                    }
+                }
+
+                MediaItems updatedItem = new MediaItems();
+                updatedItem.setVideoSources(videoSources);
+                updatedItem.setSubtitles(subtitles);
+
+                mainHandler.post(() -> callback.onSuccess(updatedItem));
+
+            } catch (Exception e) {
+                Log.e(TAG, "Error fetching Videasy TV streams", e);
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
     }
 
     /**

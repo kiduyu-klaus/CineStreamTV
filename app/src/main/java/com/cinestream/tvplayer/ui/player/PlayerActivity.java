@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
@@ -59,7 +60,7 @@ public class PlayerActivity extends AppCompatActivity {
     private ImageView subtitleButton;
     private TextView currentTimeTextView;
     private TextView totalTimeTextView;
-    private SeekBar seekBar; // Changed from ProgressBar to SeekBar
+    private ProgressBar seekBar; // Changed from ProgressBar to SeekBar
     private ProgressBar loadingProgressBar;
 
     // Managers and Dialogs
@@ -304,6 +305,7 @@ public class PlayerActivity extends AppCompatActivity {
         DefaultDataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(this);
 
         Uri uri = getMediaUri(mediaItem);
+        Log.i("PlayerActivity", "createMediaSource: "+uri);
         String uriString = uri.toString().toLowerCase();
 
         // Determine format by checking URL extension or patterns
