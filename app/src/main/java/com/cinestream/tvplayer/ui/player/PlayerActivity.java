@@ -26,7 +26,6 @@ import androidx.media3.common.MimeTypes;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.common.util.UnstableApi;
-import androidx.media3.common.util.Util;
 import androidx.media3.datasource.DefaultDataSource;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.dash.DashMediaSource;
@@ -39,6 +38,7 @@ import androidx.media3.ui.PlayerView;
 import com.cinestream.tvplayer.R;
 import com.cinestream.tvplayer.data.model.MediaItems;
 import com.cinestream.tvplayer.ui.player.dialog.QualitySelectionDialog;
+import com.cinestream.tvplayer.ui.player.dialog.ServerSelectionDialog;
 import com.cinestream.tvplayer.ui.player.dialog.SubtitleSelectionDialog;
 
 import java.util.ArrayList;
@@ -53,21 +53,28 @@ public class PlayerActivity extends AppCompatActivity {
     private MediaItem currentMediaItem;
     private MediaItems sourceMediaItem;
 
+    // Top Bar
+    private LinearLayout topBar;
+    private ImageView backButton;
+    private TextView titleTopTextView;
+
     // UI Controls
     private LinearLayout controlsLayout;
     private ImageView playPauseButton;
-    private ImageView rewindButton;
-    private ImageView fastForwardButton;
-    private AppCompatButton qualityButton;
-    private AppCompatButton subtitleButton;
     private TextView currentTimeTextView;
-    private TextView totalTimeTextView;
     private SeekBar seekBar;
     private ProgressBar loadingProgressBar;
 
-    // Managers and Dialogs
+    // Bottom Buttons
+    private AppCompatButton serversButton;
+    private AppCompatButton qualityButton;
+    private AppCompatButton subtitleButton;
+    private AppCompatButton speedButton;
+
+    // Dialogs
     private QualitySelectionDialog qualityDialog;
     private SubtitleSelectionDialog subtitleDialog;
+    private ServerSelectionDialog serverDialog;
 
     // Control visibility
     private Handler controlVisibilityHandler = new Handler(Looper.getMainLooper());
@@ -83,6 +90,8 @@ public class PlayerActivity extends AppCompatActivity {
     private boolean isPrepared = false;
     private long savedPlaybackPosition = 0;
     private boolean playWhenReady = true;
+    private String currentQuality = "Auto";
+    private float currentSpeed = 1.0f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +115,8 @@ public class PlayerActivity extends AppCompatActivity {
         if (savedInstanceState != null) {
             savedPlaybackPosition = savedInstanceState.getLong("playback_position", 0);
             playWhenReady = savedInstanceState.getBoolean("play_when_ready", true);
+            currentQuality = savedInstanceState.getString("current_quality", "Auto");
+            currentSpeed = savedInstanceState.getFloat("current_speed", 1.0f);
         }
 
         initializeViews();
@@ -117,20 +128,29 @@ public class PlayerActivity extends AppCompatActivity {
 
     private void initializeViews() {
         playerView = findViewById(R.id.playerView);
+        loadingProgressBar = findViewById(R.id.loadingProgressBar);
+
+        // Top Bar
+        topBar = findViewById(R.id.topBar);
+        backButton = findViewById(R.id.backButton);
+        titleTopTextView = findViewById(R.id.titleTopTextView);
+
+        // Controls
         controlsLayout = findViewById(R.id.controlsLayout);
         playPauseButton = findViewById(R.id.playPauseButton);
-        rewindButton = findViewById(R.id.rewindButton);
-        fastForwardButton = findViewById(R.id.fastForwardButton);
+        currentTimeTextView = findViewById(R.id.currentTimeTextView);
+        seekBar = findViewById(R.id.progressBar);
+
+        // Bottom Buttons
+        serversButton = findViewById(R.id.serversButton);
         qualityButton = findViewById(R.id.qualityButton);
         subtitleButton = findViewById(R.id.subtitleButton);
-        currentTimeTextView = findViewById(R.id.currentTimeTextView);
-        totalTimeTextView = findViewById(R.id.totalTimeTextView);
-        seekBar = findViewById(R.id.progressBar);
-        loadingProgressBar = findViewById(R.id.loadingProgressBar);
+        speedButton = findViewById(R.id.speedButton);
 
         // Initialize dialogs
         qualityDialog = new QualitySelectionDialog();
         subtitleDialog = new SubtitleSelectionDialog();
+        serverDialog = new ServerSelectionDialog();
     }
 
     private void setupPlayer() {
@@ -155,32 +175,44 @@ public class PlayerActivity extends AppCompatActivity {
 
     private void setupUI() {
         // Set up initial state
-        updatePlayPauseButton(false); // Paused initially
+        updatePlayPauseButton(false);
         showControls();
+
+        // Set movie title
+        if (sourceMediaItem != null) {
+            titleTopTextView.setText(sourceMediaItem.getTitle());
+        }
+
+        // Update quality button with current quality
+        updateQualityButton();
 
         // Request initial focus on play/pause button
         playPauseButton.post(() -> playPauseButton.requestFocus());
     }
 
     private void setupClickListeners() {
+        // Top bar
+        backButton.setOnClickListener(v -> finish());
+
+        // Play controls
         playPauseButton.setOnClickListener(v -> togglePlayPause());
-        rewindButton.setOnClickListener(v -> rewind());
-        fastForwardButton.setOnClickListener(v -> fastForward());
+
+        // Bottom buttons
+        serversButton.setOnClickListener(v -> showServersDialog());
         qualityButton.setOnClickListener(v -> showQualityDialog());
         subtitleButton.setOnClickListener(v -> showSubtitleDialog());
+        speedButton.setOnClickListener(v -> showSpeedDialog());
 
-        // Add focus change listeners to show controls and animate when navigating
+        // Add focus change listeners for animations
         View.OnFocusChangeListener focusListener = (v, hasFocus) -> {
             if (hasFocus) {
                 showControls();
-                // Scale up animation
                 v.animate()
-                        .scaleX(1.1f)
-                        .scaleY(1.1f)
+                        .scaleX(1.05f)
+                        .scaleY(1.05f)
                         .setDuration(150)
                         .start();
             } else {
-                // Scale down animation
                 v.animate()
                         .scaleX(1.0f)
                         .scaleY(1.0f)
@@ -190,12 +222,14 @@ public class PlayerActivity extends AppCompatActivity {
         };
 
         playPauseButton.setOnFocusChangeListener(focusListener);
-        rewindButton.setOnFocusChangeListener(focusListener);
-        fastForwardButton.setOnFocusChangeListener(focusListener);
+        serversButton.setOnFocusChangeListener(focusListener);
         qualityButton.setOnFocusChangeListener(focusListener);
         subtitleButton.setOnFocusChangeListener(focusListener);
+        speedButton.setOnFocusChangeListener(focusListener);
+        backButton.setOnFocusChangeListener(focusListener);
         seekBar.setOnFocusChangeListener(focusListener);
 
+        // SeekBar listener
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -210,13 +244,11 @@ public class PlayerActivity extends AppCompatActivity {
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-                // Pause progress updates while seeking
                 stopProgressUpdate();
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                // Actually seek when user releases
                 if (player != null) {
                     long duration = player.getDuration();
                     if (duration != C.TIME_UNSET) {
@@ -224,7 +256,6 @@ public class PlayerActivity extends AppCompatActivity {
                         player.seekTo(seekTime);
                     }
                 }
-                // Resume progress updates after seeking
                 startProgressUpdate();
                 showControls();
             }
@@ -243,8 +274,6 @@ public class PlayerActivity extends AppCompatActivity {
                         loadingProgressBar.setVisibility(View.GONE);
                         if (!isPrepared) {
                             isPrepared = true;
-                            updateDuration();
-                            // Restore playback position if saved
                             if (savedPlaybackPosition > 0) {
                                 player.seekTo(savedPlaybackPosition);
                             }
@@ -253,10 +282,9 @@ public class PlayerActivity extends AppCompatActivity {
                     case Player.STATE_ENDED:
                         updatePlayPauseButton(false);
                         stopProgressUpdate();
-                        showControls(); // Show controls when video ends
+                        showControls();
                         break;
                     case Player.STATE_IDLE:
-                        // Player is idle
                         break;
                 }
             }
@@ -276,9 +304,7 @@ public class PlayerActivity extends AppCompatActivity {
                 loadingProgressBar.setVisibility(View.GONE);
                 String errorMessage = "Playback error: " + error.getMessage();
                 Toast.makeText(PlayerActivity.this, errorMessage, Toast.LENGTH_LONG).show();
-
-                // Log error for debugging
-                android.util.Log.e("PlayerActivity", "Playback error", error);
+                Log.e("PlayerActivity", "Playback error", error);
             }
         });
     }
@@ -298,15 +324,22 @@ public class PlayerActivity extends AppCompatActivity {
             return;
         }
 
-        // Create MediaItem with subtitle configuration
-        MediaItem.Builder mediaItemBuilder = new MediaItem.Builder()
-                .setUri(getMediaUri(sourceMediaItem));
-                //.setMediaId(sourceMediaItem.getId());
 
+        MediaItem.Builder mediaItemBuilder = new MediaItem.Builder();
+
+        if (!sourceMediaItem.getId().isEmpty()) {
+            // Create MediaItem with subtitle configuration
+            mediaItemBuilder.setUri(getMediaUri(sourceMediaItem))
+                    .setMediaId(sourceMediaItem.getId());
+            // }
+        }
+        else{
+            mediaItemBuilder
+                    .setUri(getMediaUri(sourceMediaItem));
+        }
         // Add subtitles if available
         List<MediaItem.SubtitleConfiguration> subtitleList = new ArrayList<>();
 
-        // Add API subtitles if available
         if (sourceMediaItem.getSubtitles() != null && !sourceMediaItem.getSubtitles().isEmpty()) {
             for (MediaItems.SubtitleItem subtitleItem : sourceMediaItem.getSubtitles()) {
                 MediaItem.SubtitleConfiguration subtitle = new MediaItem.SubtitleConfiguration.Builder(
@@ -317,9 +350,7 @@ public class PlayerActivity extends AppCompatActivity {
                         .build();
                 subtitleList.add(subtitle);
             }
-        }
-        // Fallback to single subtitle URL if no API subtitles
-        else if (sourceMediaItem.getSubtitleUrl() != null && !sourceMediaItem.getSubtitleUrl().isEmpty()) {
+        } else if (sourceMediaItem.getSubtitleUrl() != null && !sourceMediaItem.getSubtitleUrl().isEmpty()) {
             MediaItem.SubtitleConfiguration subtitle = new MediaItem.SubtitleConfiguration.Builder(
                     Uri.parse(sourceMediaItem.getSubtitleUrl()))
                     .setMimeType(MimeTypes.TEXT_VTT)
@@ -339,26 +370,42 @@ public class PlayerActivity extends AppCompatActivity {
         player.setMediaSource(mediaSource);
         player.prepare();
         player.setPlayWhenReady(playWhenReady);
+
+        // Apply saved speed
+        player.setPlaybackSpeed(currentSpeed);
     }
 
     private MediaSource createMediaSource(MediaItems mediaItem) {
         DefaultDataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(this);
 
         Uri uri = getMediaUri(mediaItem);
-        Log.i("PlayerActivity", "createMediaSource: "+uri);
+        Log.i("PlayerActivity", "createMediaSource: " + uri);
         String uriString = uri.toString().toLowerCase();
 
-        // Determine format by checking URL extension or patterns
         if (uriString.contains(".m3u8") || uriString.contains("m3u8")) {
-            // HLS (HTTP Live Streaming)
             return new HlsMediaSource.Factory(dataSourceFactory)
                     .createMediaSource(MediaItem.fromUri(uri));
         } else if (uriString.contains(".mpd") || uriString.contains("mpd")) {
-            // DASH (Dynamic Adaptive Streaming)
             return new DashMediaSource.Factory(dataSourceFactory)
                     .createMediaSource(MediaItem.fromUri(uri));
         } else {
-            // Progressive download (MP4, MKV, WebM, etc.)
+            return new ProgressiveMediaSource.Factory(dataSourceFactory)
+                    .createMediaSource(MediaItem.fromUri(uri));
+        }
+    }
+
+    private MediaSource createMediaSourceFromUrl(String url) {
+        DefaultDataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(this);
+        Uri uri = Uri.parse(url);
+        String uriString = url.toLowerCase();
+
+        if (uriString.contains(".m3u8") || uriString.contains("m3u8")) {
+            return new HlsMediaSource.Factory(dataSourceFactory)
+                    .createMediaSource(MediaItem.fromUri(uri));
+        } else if (uriString.contains(".mpd") || uriString.contains("mpd")) {
+            return new DashMediaSource.Factory(dataSourceFactory)
+                    .createMediaSource(MediaItem.fromUri(uri));
+        } else {
             return new ProgressiveMediaSource.Factory(dataSourceFactory)
                     .createMediaSource(MediaItem.fromUri(uri));
         }
@@ -380,21 +427,13 @@ public class PlayerActivity extends AppCompatActivity {
         }
     }
 
-    private void rewind() {
-        if (player != null) {
-            player.seekTo(Math.max(0, player.getCurrentPosition() - 30000)); // 30 seconds back
-            showControls();
-        }
-    }
-
-    private void fastForward() {
-        if (player != null) {
-            long duration = player.getDuration();
-            if (duration != C.TIME_UNSET) {
-                long newPosition = Math.min(duration, player.getCurrentPosition() + 30000); // 30 seconds forward
-                player.seekTo(newPosition);
-            }
-            showControls();
+    private void showServersDialog() {
+        if (sourceMediaItem != null) {
+            serverDialog.setVideoSources(sourceMediaItem.getVideoSources());
+            serverDialog.setOnServerSelectedListener(serverItem -> {
+                switchToServer(serverItem.getUrl(), serverItem.getQuality());
+            });
+            serverDialog.show(getSupportFragmentManager(), "server_dialog");
         }
     }
 
@@ -402,10 +441,14 @@ public class PlayerActivity extends AppCompatActivity {
         if (player != null && trackSelector != null) {
             qualityDialog.setTrackSelector(trackSelector, player);
 
-            // Pass video sources from media item if available
             if (sourceMediaItem != null && sourceMediaItem.getVideoSources() != null) {
                 qualityDialog.setVideoSources(sourceMediaItem.getVideoSources());
             }
+
+            qualityDialog.setOnQualitySelectedListener(qualityItem -> {
+                currentQuality = qualityItem.getTitle();
+                updateQualityButton();
+            });
 
             qualityDialog.show(getSupportFragmentManager(), "quality_dialog");
         }
@@ -415,13 +458,61 @@ public class PlayerActivity extends AppCompatActivity {
         if (player != null && trackSelector != null) {
             subtitleDialog.setTrackSelector(trackSelector, player);
 
-            // Pass subtitles from media item if available
             if (sourceMediaItem != null && sourceMediaItem.getSubtitles() != null) {
                 subtitleDialog.setMediaSubtitles(sourceMediaItem.getSubtitles());
             }
 
             subtitleDialog.show(getSupportFragmentManager(), "subtitle_dialog");
         }
+    }
+
+    private void showSpeedDialog() {
+        // Create speed selection dialog
+        String[] speeds = {"0.5x", "0.75x", "1x", "1.25x", "1.5x", "2x"};
+        float[] speedValues = {0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f};
+
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle("Playback Speed")
+                .setItems(speeds, (dialog, which) -> {
+                    currentSpeed = speedValues[which];
+                    if (player != null) {
+                        player.setPlaybackSpeed(currentSpeed);
+                    }
+                    Toast.makeText(this, "Speed: " + speeds[which], Toast.LENGTH_SHORT).show();
+                })
+                .show();
+    }
+
+    private void switchToServer(String newUrl, String quality) {
+        if (player == null || newUrl == null || newUrl.isEmpty()) return;
+
+        // Save current position
+        long currentPosition = player.getCurrentPosition();
+        boolean wasPlaying = player.isPlaying();
+
+        try {
+            // Create new media source
+            MediaSource newMediaSource = createMediaSourceFromUrl(newUrl);
+
+            // Switch source
+            player.setMediaSource(newMediaSource);
+            player.prepare();
+            player.seekTo(currentPosition);
+            player.setPlayWhenReady(wasPlaying);
+
+            // Update quality button
+            currentQuality = quality;
+            updateQualityButton();
+
+            Toast.makeText(this, "Switched to " + quality, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e("PlayerActivity", "Error switching server", e);
+            Toast.makeText(this, "Failed to switch server", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void updateQualityButton() {
+        qualityButton.setText(currentQuality);
     }
 
     private void toggleControlsVisibility() {
@@ -433,21 +524,12 @@ public class PlayerActivity extends AppCompatActivity {
     }
 
     private void updatePlayPauseButton(boolean isPlaying) {
-        int drawableRes = isPlaying ? R.drawable.ic_pause : R.drawable.ic_play;
+        int drawableRes = isPlaying ? R.drawable.ic_pause : R.drawable.ic_play_circle;
         playPauseButton.setImageResource(drawableRes);
     }
 
-    private void updateDuration() {
-        if (player != null) {
-            long duration = player.getDuration();
-            if (duration != C.TIME_UNSET) {
-                totalTimeTextView.setText(formatTime(duration));
-            }
-        }
-    }
-
     private void startProgressUpdate() {
-        stopProgressUpdate(); // Stop any existing updates
+        stopProgressUpdate();
         progressUpdateRunnable = new Runnable() {
             @Override
             public void run() {
@@ -462,7 +544,6 @@ public class PlayerActivity extends AppCompatActivity {
                         seekBar.setProgress(progress);
                     }
 
-                    // Schedule next update
                     progressUpdateHandler.postDelayed(this, 1000);
                 }
             }
@@ -491,15 +572,14 @@ public class PlayerActivity extends AppCompatActivity {
     private void showControls() {
         if (!isControlsVisible) {
             controlsLayout.setVisibility(View.VISIBLE);
+            topBar.setVisibility(View.VISIBLE);
             isControlsVisible = true;
         }
 
-        // Remove existing callbacks
         if (hideControlsRunnable != null) {
             controlVisibilityHandler.removeCallbacks(hideControlsRunnable);
         }
 
-        // Set new callback to hide controls
         hideControlsRunnable = this::hideControls;
         controlVisibilityHandler.postDelayed(hideControlsRunnable, CONTROLS_VISIBLE_DURATION);
     }
@@ -507,6 +587,7 @@ public class PlayerActivity extends AppCompatActivity {
     private void hideControls() {
         if (player != null && player.isPlaying()) {
             controlsLayout.setVisibility(View.GONE);
+            topBar.setVisibility(View.GONE);
             isControlsVisible = false;
         }
     }
@@ -520,7 +601,6 @@ public class PlayerActivity extends AppCompatActivity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // Handle D-pad center/Enter key
         if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
             if (!isControlsVisible) {
                 showControls();
@@ -528,7 +608,6 @@ public class PlayerActivity extends AppCompatActivity {
             }
         }
 
-        // Handle media control keys
         switch (keyCode) {
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
             case KeyEvent.KEYCODE_MEDIA_PLAY:
@@ -537,12 +616,26 @@ public class PlayerActivity extends AppCompatActivity {
                 return true;
 
             case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
-                fastForward();
-                return true;
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+                if (!isControlsVisible && player != null) {
+                    long duration = player.getDuration();
+                    if (duration != C.TIME_UNSET) {
+                        long newPosition = Math.min(duration, player.getCurrentPosition() + 10000);
+                        player.seekTo(newPosition);
+                        showControls();
+                    }
+                    return true;
+                }
+                break;
 
             case KeyEvent.KEYCODE_MEDIA_REWIND:
-                rewind();
-                return true;
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+                if (!isControlsVisible && player != null) {
+                    player.seekTo(Math.max(0, player.getCurrentPosition() - 10000));
+                    showControls();
+                    return true;
+                }
+                break;
         }
 
         return super.onKeyDown(keyCode, event);
@@ -554,6 +647,8 @@ public class PlayerActivity extends AppCompatActivity {
         if (player != null) {
             outState.putLong("playback_position", player.getCurrentPosition());
             outState.putBoolean("play_when_ready", player.getPlayWhenReady());
+            outState.putString("current_quality", currentQuality);
+            outState.putFloat("current_speed", currentSpeed);
         }
     }
 
