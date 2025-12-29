@@ -38,17 +38,11 @@ public class ServerSelectionDialog extends DialogFragment {
     }
 
     private OnServerSelectedListener listener;
-    private View.OnClickListener viewClickListener;
 
     public void setOnServerSelectedListener(OnServerSelectedListener listener) {
         this.listener = listener;
     }
-    public void ViewClickListener(View.OnClickListener viewClickListener) {
-        //Log.i("PlayerActivity", "ViewClickListener: clicked"+serverAdapter.getSelectedPosition());
-       //serverAdapter.setSelectedPosition(currentSelectedIndex);
-        //Log.i("PlayerActivity", "ViewClickListener: "+serverAdapter.getSelectedPosition());
-        this.viewClickListener = viewClickListener;
-    }
+
 
 
     public void setMediaItem(MediaItems mediaItem) {

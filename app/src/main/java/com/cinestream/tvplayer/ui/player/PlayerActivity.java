@@ -446,9 +446,7 @@ public class PlayerActivity extends AppCompatActivity {
             // Show the dialog
             serverDialog.show(getSupportFragmentManager(), "server_dialog");
 
-            serverDialog.ViewClickListener(v -> {
-                Log.i("PlayerActivity", "View clicked");
-            });
+        
 
 
             // Set the listener
