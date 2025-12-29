@@ -96,12 +96,12 @@ public class DetailsActivity extends AppCompatActivity {
                     .centerCrop()
                     .into(backdropImageView);
         }
-
-        Glide.with(this)
-                .load(mediaItems.getPosterUrl())
-                .centerCrop()
-                .into(posterImageView);
-
+        /**if (mediaItems.getPosterUrl() != null) {
+            Glide.with(this)
+                    .load(mediaItems.getPosterUrl())
+                    .centerCrop()
+                    .into(posterImageView);
+        }**/
         titleTextView.setText(mediaItems.getTitle());
         descriptionTextView.setText(mediaItems.getDescription());
 

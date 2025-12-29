@@ -7,19 +7,20 @@
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Hero Section with Backdrop -->
+            <!-- Hero Section with Backdrop - Netflix Style -->
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="450dp">
+                android:layout_height="600dp">
 
-                <!-- Backdrop Image -->
+                <!-- Backdrop Image with Scrim -->
                 <ImageView
                     android:id="@+id/backdropImageView"
                     android:layout_width="match_parent"
@@ -27,141 +28,207 @@
                     android:scaleType="centerCrop"
                     android:src="@drawable/placeholder_movie" />
 
-                <!-- Gradient Overlay -->
+                <!-- Multi-layer Gradient Overlay -->
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="@drawable/gradient_overlay" />
+                    android:background="@drawable/gradient_overlay_strong" />
 
-                <!-- Content Container -->
+                <!-- Hero Content Container -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom"
-                    android:orientation="horizontal"
-                    android:padding="24dp">
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="bottom"
+                    android:padding="48dp"
+                    android:paddingBottom="32dp">
 
-                    <!-- Movie Poster -->
-                    <ImageView
-                        android:id="@+id/posterImageView"
-                        android:layout_width="120dp"
-                        android:layout_height="180dp"
-                        android:layout_marginEnd="16dp"
-                        android:scaleType="centerCrop"
-                        android:background="@color/charcoal"
-                        android:elevation="4dp"
-                        android:src="@drawable/placeholder_movie" />
-
-                    <!-- Movie Info -->
-                    <LinearLayout
-                        android:layout_width="0dp"
+                    <!-- Title -->
+                    <TextView
+                        android:id="@+id/titleTextView"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_gravity="bottom"
-                        android:orientation="vertical">
+                        android:layout_marginBottom="16dp"
+                        android:text="After"
+                        android:textColor="@android:color/white"
+                        android:textSize="56sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        android:shadowColor="#80000000"
+                        android:shadowDx="2"
+                        android:shadowDy="2"
+                        android:shadowRadius="8"
+                        android:maxWidth="900dp"
+                        android:focusable="false" />
 
-                        <!-- Title -->
-                        <TextView
-                            android:id="@+id/titleTextView"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="8dp"
-                            android:text="After"
-                            android:textColor="@android:color/white"
-                            android:textSize="32sp"
-                            android:textStyle="bold"
-                            android:shadowColor="#80000000"
-                            android:shadowDx="2"
-                            android:shadowDy="2"
-                            android:shadowRadius="4" />
+                    <!-- Meta Info Row -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="20dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:focusable="false">
 
-                        <!-- Meta Info Row -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="8dp"
-                            android:orientation="horizontal">
-
-                            <TextView
-                                android:id="@+id/yearTextView"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="2019"
-                                android:textColor="@color/gray_light"
-                                android:textSize="14sp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="8dp"
-                                android:layout_marginEnd="8dp"
-                                android:text="|"
-                                android:textColor="@color/gray_light"
-                                android:textSize="14sp" />
-
-                            <TextView
-                                android:id="@+id/ratingBadge"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="PG"
-                                android:textColor="@color/gray_light"
-                                android:textSize="14sp"
-                                android:paddingHorizontal="6dp"
-                                android:paddingVertical="2dp"
-                                android:background="@drawable/rating_badge_background" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="8dp"
-                                android:layout_marginEnd="8dp"
-                                android:text="|"
-                                android:textColor="@color/gray_light"
-                                android:textSize="14sp" />
-
-                            <TextView
-                                android:id="@+id/durationTextView"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="1h46m"
-                                android:textColor="@color/gray_light"
-                                android:textSize="14sp" />
-
-                        </LinearLayout>
-
-                        <!-- Genre Chips -->
-                        <TextView
-                            android:id="@+id/genresTextView"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="12dp"
-                            android:text="Drama • Romance"
-                            android:textColor="@color/gray_light"
-                            android:textSize="14sp" />
-
-                        <!-- TMDb Rating -->
+                        <!-- TMDb Rating with Star -->
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
-                            android:gravity="center_vertical">
+                            android:gravity="center_vertical"
+                            android:background="@drawable/rating_badge_filled"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="6dp"
+                            android:layout_marginEnd="12dp">
 
                             <ImageView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
-                                android:src="@drawable/ic_tmdb_logo"
-                                android:layout_marginEnd="8dp" />
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_star"
+                                android:tint="@color/cinema_red"
+                                android:layout_marginEnd="6dp" />
 
                             <TextView
                                 android:id="@+id/ratingTextView"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="7.12"
-                                android:textColor="@color/cinema_red"
-                                android:textSize="20sp"
+                                android:text="7.1"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp"
                                 android:textStyle="bold" />
 
                         </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/yearTextView"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2019"
+                            android:textColor="@android:color/white"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="16dp" />
+
+                        <TextView
+                            android:id="@+id/ratingBadge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="PG-13"
+                            android:textColor="@android:color/white"
+                            android:textSize="18sp"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="4dp"
+                            android:background="@drawable/rating_badge_background"
+                            android:layout_marginEnd="16dp" />
+
+                        <TextView
+                            android:id="@+id/durationTextView"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="1h 46m"
+                            android:textColor="@android:color/white"
+                            android:textSize="20sp"
+                            android:layout_marginEnd="16dp" />
+
+                        <!-- Genre Pills -->
+                        <TextView
+                            android:id="@+id/genresTextView"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Drama • Romance"
+                            android:textColor="@color/gray_light"
+                            android:textSize="20sp" />
+
+                    </LinearLayout>
+
+                    <!-- Description -->
+                    <TextView
+                        android:id="@+id/descriptionTextView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="32dp"
+                        android:maxWidth="900dp"
+                        android:maxLines="3"
+                        android:ellipsize="end"
+                        android:lineSpacingExtra="4dp"
+                        android:text="Tessa Young is a dedicated student, dutiful daughter and loyal girlfriend to her high school sweetheart. Entering her first semester of college, Tessa's guarded world opens up when she meets Hardin Scott..."
+                        android:textColor="@android:color/white"
+                        android:textSize="20sp"
+                        android:shadowColor="#80000000"
+                        android:shadowDx="1"
+                        android:shadowDy="1"
+                        android:shadowRadius="4"
+                        android:focusable="false" />
+
+                    <!-- Action Buttons Row -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <!-- Play Button - Primary CTA -->
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/playButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="64dp"
+                            android:minWidth="240dp"
+                            android:layout_marginEnd="16dp"
+
+                            android:background="@drawable/button_secondary_selector"
+                            android:drawableStart="@drawable/ic_play"
+                            android:drawablePadding="12dp"
+                            android:text="Play"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textAllCaps="false"
+                            android:gravity="center"
+                            android:paddingHorizontal="32dp"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:nextFocusRight="@id/favoriteButton"
+                            android:nextFocusDown="@id/creatorsTextView" />
+
+                        <!-- More Info Button -->
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/moreInfoButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="64dp"
+                            android:minWidth="240dp"
+                            android:layout_marginEnd="16dp"
+                            android:background="@drawable/button_secondary_selector"
+                            android:drawableStart="@drawable/ic_info"
+                            android:drawablePadding="12dp"
+                            android:drawableTint="@android:color/white"
+                            android:text="More Info"
+                            android:textColor="@android:color/white"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textAllCaps="false"
+                            android:gravity="center"
+                            android:paddingHorizontal="32dp"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:nextFocusLeft="@id/playButton"
+                            android:nextFocusRight="@id/favoriteButton"
+                            android:nextFocusDown="@id/creatorsTextView"
+                            android:visibility="gone" />
+
+                        <!-- Favorite Button - Icon Only -->
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/favoriteButton"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:visibility="gone"
+                            android:drawableStart="@drawable/ic_favorite_border"
+                            android:drawableTint="@android:color/white"
+                            android:padding="0dp"
+                            android:gravity="center"
+                            android:layout_gravity="center"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:nextFocusLeft="@id/playButton"
+                            android:nextFocusDown="@id/creatorsTextView" />
 
                     </LinearLayout>
 
@@ -169,105 +236,84 @@
 
             </FrameLayout>
 
-            <!-- Description and Details Section -->
+            <!-- Details Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="24dp">
+                android:padding="48dp"
+                android:paddingTop="32dp">
 
-                <!-- Description -->
-                <TextView
-                    android:id="@+id/descriptionTextView"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="24dp"
-                    android:lineSpacingExtra="4dp"
-                    android:text="Tessa Young is a dedicated student, dutiful daughter and loyal girlfriend to her high school sweetheart. Entering her first semester of college, Tessa's guarded world opens up when she meet..."
-                    android:textColor="@android:color/white"
-                    android:textSize="16sp" />
-
-                <!-- Action Buttons -->
+                <!-- Cast & Crew Info Grid -->
                 <LinearLayout
+                    android:visibility="gone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="24dp"
+                    android:layout_marginBottom="48dp"
                     android:orientation="horizontal">
 
-                    <!-- Play Button -->
-                    <androidx.appcompat.widget.AppCompatButton
-                        android:id="@+id/playButton"
+                    <!-- Stars Column -->
+                    <LinearLayout
                         android:layout_width="0dp"
-                        android:layout_height="56dp"
                         android:layout_weight="1"
-                        android:layout_marginEnd="8dp"
-                        android:background="@color/cinema_red"
-                        android:drawableStart="@drawable/ic_play"
-                        android:drawablePadding="8dp"
-                        android:text="Watch"
-                        android:textColor="@android:color/white"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:gravity="center" />
-
-                    <!-- Favorite Button -->
-                    <androidx.appcompat.widget.AppCompatButton
-                        android:id="@+id/favoriteButton"
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
-                        android:background="@drawable/icon_button_background"
-                        android:drawableTop="@drawable/ic_favorite_border"
-                        android:padding="0dp" />
-
-                </LinearLayout>
-
-                <!-- Creators -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Creators"
-                        android:textColor="@color/gray_light"
-                        android:textSize="14sp"
-                        android:layout_marginBottom="4dp" />
+                        android:layout_marginEnd="32dp"
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/creatorsTextView"
-                        android:layout_width="wrap_content"
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Stars"
+                            android:textColor="@color/gray_light"
+                            android:textSize="16sp"
+                            android:layout_marginBottom="8dp"
+                            android:focusable="false" />
+
+                        <TextView
+                            android:id="@+id/starsTextView"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Josephine Langford, Hero Fiennes Tiffin"
+                            android:textColor="@android:color/white"
+                            android:textSize="18sp"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:nextFocusUp="@id/playButton"
+                            android:nextFocusRight="@id/creatorsTextView"
+                            android:nextFocusDown="@id/recommendationsRecyclerView" />
+
+                    </LinearLayout>
+
+                    <!-- Creators Column -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:text="Aron Levitz, Jennifer Gibg..."
-                        android:textColor="@android:color/white"
-                        android:textSize="16sp" />
+                        android:orientation="vertical">
 
-                </LinearLayout>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Creators"
+                            android:textColor="@color/gray_light"
+                            android:textSize="16sp"
+                            android:layout_marginBottom="8dp"
+                            android:focusable="false" />
 
-                <!-- Stars -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="32dp"
-                    android:orientation="vertical">
+                        <TextView
+                            android:id="@+id/creatorsTextView"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Jenny Gage, Susan McMartin"
+                            android:textColor="@android:color/white"
+                            android:textSize="18sp"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:nextFocusUp="@id/playButton"
+                            android:nextFocusLeft="@id/starsTextView"
+                            android:nextFocusDown="@id/recommendationsRecyclerView" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Stars"
-                        android:textColor="@color/gray_light"
-                        android:textSize="14sp"
-                        android:layout_marginBottom="4dp" />
-
-                    <TextView
-                        android:id="@+id/starsTextView"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Josephine Langford, Hero ..."
-                        android:textColor="@android:color/white"
-                        android:textSize="16sp" />
+                    </LinearLayout>
 
                 </LinearLayout>
 
@@ -276,11 +322,12 @@
                     android:id="@+id/recommendationsTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Recommendations"
+                    android:text="More Like This"
                     android:textColor="@android:color/white"
-                    android:textSize="20sp"
+                    android:textSize="28sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_marginBottom="24dp"
+                    android:focusable="false" />
 
                 <ProgressBar
                     android:id="@+id/recommendationsLoadingBar"
@@ -294,7 +341,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:clipToPadding="false"
-                    android:paddingBottom="16dp" />
+                    android:paddingBottom="48dp"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:nextFocusUp="@id/starsTextView" />
 
             </LinearLayout>
 
@@ -307,26 +357,34 @@
         android:id="@+id/loadingOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#80000000"
+        android:background="#CC000000"
         android:visibility="gone"
-        android:clickable="true">
+        android:clickable="true"
+        android:focusable="true">
 
-        <ProgressBar
-            android:id="@+id/loadingProgressBar"
-            style="?android:attr/progressBarStyleLarge"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true" />
+            android:layout_centerInParent="true"
+            android:orientation="vertical"
+            android:gravity="center">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/loadingProgressBar"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="16dp"
-            android:text="Loading video sources..."
-            android:textColor="@android:color/white"
-            android:textSize="16sp" />
+            <ProgressBar
+                android:id="@+id/loadingProgressBar"
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:indeterminateTint="@color/cinema_red" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Loading video sources..."
+                android:textColor="@android:color/white"
+                android:textSize="20sp" />
+
+        </LinearLayout>
 
     </RelativeLayout>
 
