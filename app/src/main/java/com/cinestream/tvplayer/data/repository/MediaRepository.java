@@ -31,15 +31,74 @@ public class MediaRepository {
     private static final String BEARER_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0MTAzZmMzMDY1YzEyMmViNWRiNmJkY2ZmNzQ5ZmRlNyIsIm5iZiI6MTY2ODA2NDAzNC4yNDk5OTk4LCJzdWIiOiI2MzZjYTMyMjA0OTlmMjAwN2ZlYjA4MWEiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.tjvtYPTPfLOyMdOouQ14GGgOzmfnZRW4RgvOzfoq19w";
 
     private static final int TIMEOUT_MS = 10000;
+    private static MediaRepository instance;
 
     // Thread management
     private final ExecutorService executorService = Executors.newFixedThreadPool(4);
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
+
+
     // Callback interface for async operations
     public interface TMDBCallback {
         void onSuccess(List<MediaItems> movies);
         void onError(String error);
+    }
+
+    /**
+     * Async method to fetch movie/TV recommendations
+     */
+    public void getRecommendationsAsync(String tmdbId, String mediaType, TMDBCallback callback) {
+        executorService.execute(() -> {
+            try {
+                String urlString = TMDB_BASE_URL + "/" + mediaType + "/" + tmdbId + "/recommendations?language=en-US&page=1";
+                List<MediaItems> recommendations = fetchRecommendationsFromTMDB(urlString, mediaType);
+                mainHandler.post(() -> callback.onSuccess(recommendations));
+            } catch (Exception e) {
+                Log.e(TAG, "Error fetching recommendations", e);
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    /**
+     * Fetch recommendations from TMDB API using Jsoup
+     */
+    private List<MediaItems> fetchRecommendationsFromTMDB(String urlString, String mediaType) throws IOException, JSONException {
+        List<MediaItems> recommendations = new ArrayList<>();
+
+        Connection.Response response = Jsoup.connect(urlString)
+                .header("accept", "application/json")
+                .header("Authorization", "Bearer " + BEARER_TOKEN)
+                .ignoreContentType(true)
+                .timeout(TIMEOUT_MS)
+                .method(Connection.Method.GET)
+                .execute();
+
+        if (response.statusCode() == 200) {
+            Log.d(TAG, "fetchRecommendationsFromTMDB: Success");
+
+            JSONObject jsonResponse = new JSONObject(response.body());
+            JSONArray results = jsonResponse.getJSONArray("results");
+
+            for (int i = 0; i < results.length() && i < 20; i++) {
+                JSONObject itemJson = results.getJSONObject(i);
+
+                // Determine content type for parsing
+                TMDBApiClient.ContentType contentType = "movie".equals(mediaType) ?
+                        TMDBApiClient.ContentType.MOVIE : TMDBApiClient.ContentType.TV;
+
+                MediaItems item = createMediaItemFromTMDB(itemJson, contentType);
+                if (item != null) {
+                    recommendations.add(item);
+                }
+            }
+        } else {
+            Log.e(TAG, "fetchRecommendationsFromTMDB: Failed with status " + response.statusCode());
+            throw new IOException("Failed to fetch recommendations: " + response.statusCode());
+        }
+
+        return recommendations;
     }
 
     /**
@@ -251,6 +310,24 @@ public class MediaRepository {
                 mediaItems.setHeroImageUrl(IMAGE_BASE_URL + ORIGINAL_SIZE + posterPath);
             }
 
+            // Handle genres from genre_ids array
+            JSONArray genreIds = tmdbItem.optJSONArray("genre_ids");
+            if (genreIds != null && genreIds.length() > 0) {
+                List<String> genres = new ArrayList<>();
+                for (int i = 0; i < genreIds.length(); i++) {
+                    String genreName = getGenreName(genreIds.getInt(i));
+                    if (genreName != null) {
+                        genres.add(genreName);
+                    }
+                }
+                mediaItems.setGenres(genres);
+
+                // Set first genre as the genre string for backward compatibility
+                if (!genres.isEmpty()) {
+                    mediaItems.setGenre(genres.get(0));
+                }
+            }
+
             // Set from TMDB flag
             mediaItems.setFromTMDB(true);
 
@@ -259,6 +336,43 @@ public class MediaRepository {
         } catch (JSONException e) {
             Log.e(TAG, "Error creating MediaItem from TMDB data", e);
             return null;
+        }
+    }
+
+    /**
+     * Map genre IDs to genre names
+     */
+    private String getGenreName(int genreId) {
+        switch (genreId) {
+            case 28: return "Action";
+            case 12: return "Adventure";
+            case 16: return "Animation";
+            case 35: return "Comedy";
+            case 80: return "Crime";
+            case 99: return "Documentary";
+            case 18: return "Drama";
+            case 10751: return "Family";
+            case 14: return "Fantasy";
+            case 36: return "History";
+            case 27: return "Horror";
+            case 10402: return "Music";
+            case 9648: return "Mystery";
+            case 10749: return "Romance";
+            case 878: return "Science Fiction";
+            case 10770: return "TV Movie";
+            case 53: return "Thriller";
+            case 10752: return "War";
+            case 37: return "Western";
+            // TV genres
+            case 10759: return "Action & Adventure";
+            case 10762: return "Kids";
+            case 10763: return "News";
+            case 10764: return "Reality";
+            case 10765: return "Sci-Fi & Fantasy";
+            case 10766: return "Soap";
+            case 10767: return "Talk";
+            case 10768: return "War & Politics";
+            default: return null;
         }
     }
 
@@ -281,7 +395,7 @@ public class MediaRepository {
                 mediaItems.setTagline(tagline);
                 mediaItems.setVoteCount(voteCount);
 
-                // Add genre information
+                // Add genre information from genres array (not genre_ids)
                 JSONArray genres = tmdbItem.optJSONArray("genres");
                 if (genres != null && genres.length() > 0) {
                     List<String> genreList = new ArrayList<>();
@@ -290,6 +404,11 @@ public class MediaRepository {
                         genreList.add(genre.getString("name"));
                     }
                     mediaItems.setGenres(genreList);
+
+                    // Set first genre as the genre string
+                    if (!genreList.isEmpty()) {
+                        mediaItems.setGenre(genreList.get(0));
+                    }
                 }
 
             } catch (JSONException e) {
