@@ -71,7 +71,7 @@ public class DetailsActivity extends AppCompatActivity {
 
     private void initializeViews() {
         backdropImageView = findViewById(R.id.backdropImageView);
-        posterImageView = findViewById(R.id.posterImageView);
+        //posterImageView = findViewById(R.id.posterImageView);
         titleTextView = findViewById(R.id.titleTextView);
         descriptionTextView = findViewById(R.id.descriptionTextView);
         yearTextView = findViewById(R.id.yearTextView);

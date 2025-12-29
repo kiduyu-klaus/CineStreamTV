@@ -15,129 +15,137 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Hero Section with Backdrop - Netflix Style -->
+            <!-- Hero Section -->
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="600dp">
+                android:layout_height="wrap_content">
 
-                <!-- Backdrop Image with Scrim -->
+                <!-- Backdrop Image -->
                 <ImageView
                     android:id="@+id/backdropImageView"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="300dp"
                     android:scaleType="centerCrop"
                     android:src="@drawable/placeholder_movie" />
 
-                <!-- Multi-layer Gradient Overlay -->
+                <!-- Gradient Overlay -->
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/gradient_overlay_strong" />
+                    android:layout_height="300dp"
+                    android:background="@drawable/hero_gradient" />
 
-                <!-- Hero Content Container -->
+                <!-- Hero Content -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:gravity="bottom"
-                    android:padding="48dp"
-                    android:paddingBottom="32dp">
+                    android:padding="20dp">
 
                     <!-- Title -->
                     <TextView
                         android:id="@+id/titleTextView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
-                        android:text="After"
-                        android:textColor="@android:color/white"
-                        android:textSize="56sp"
-                        android:textStyle="bold"
+                        android:layout_marginBottom="6dp"
                         android:fontFamily="sans-serif-medium"
+                        android:maxWidth="800dp"
                         android:shadowColor="#80000000"
                         android:shadowDx="2"
                         android:shadowDy="2"
                         android:shadowRadius="8"
-                        android:maxWidth="900dp"
-                        android:focusable="false" />
+                        android:text="Now You See Me: Now You Don't"
+                        android:textColor="@android:color/white"
+                        android:textSize="48sp"
+                        android:textStyle="bold" />
 
-                    <!-- Meta Info Row -->
+                    <!-- Rating and Meta Info Row -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="20dp"
-                        android:orientation="horizontal"
+                        android:layout_marginBottom="6dp"
                         android:gravity="center_vertical"
-                        android:focusable="false">
+                        android:orientation="horizontal">
 
-                        <!-- TMDb Rating with Star -->
-                        <LinearLayout
+                        <!-- Star Rating -->
+                        <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:background="@drawable/rating_badge_filled"
-                            android:paddingHorizontal="12dp"
-                            android:paddingVertical="6dp"
-                            android:layout_marginEnd="12dp">
+                            android:layout_marginEnd="4dp"
+                            android:text="★"
+                            android:textColor="@android:color/white"
+                            android:textSize="20sp" />
 
-                            <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:src="@drawable/ic_star"
-                                android:tint="@color/cinema_red"
-                                android:layout_marginEnd="6dp" />
+                        <TextView
+                            android:id="@+id/ratingTextView"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="16dp"
+                            android:text="6.5"
+                            android:textColor="@android:color/white"
+                            android:textSize="18sp" />
 
-                            <TextView
-                                android:id="@+id/ratingTextView"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="7.1"
-                                android:textColor="@android:color/white"
-                                android:textSize="18sp"
-                                android:textStyle="bold" />
+                        <!-- Bullet Separator -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="16dp"
+                            android:text="•"
+                            android:textColor="@android:color/white"
+                            android:textSize="18sp" />
 
-                        </LinearLayout>
-
+                        <!-- Release Date -->
                         <TextView
                             android:id="@+id/yearTextView"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="2019"
+                            android:text="November 12, 2025"
                             android:textColor="@android:color/white"
-                            android:textSize="20sp"
-                            android:textStyle="bold"
-                            android:layout_marginEnd="16dp" />
+                            android:textSize="18sp" />
+
+                    </LinearLayout>
+
+                    <!-- Genre Pills -->
+                    <LinearLayout
+                        android:id="@+id/genreContainer"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        android:orientation="horizontal">
 
                         <TextView
-                            android:id="@+id/ratingBadge"
+                            android:id="@+id/genre1TextView"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="PG-13"
+                            android:layout_marginEnd="12dp"
+                            android:background="@drawable/genre_pill_background"
+                            android:paddingHorizontal="16dp"
+                            android:paddingVertical="8dp"
+                            android:text="Thriller"
                             android:textColor="@android:color/white"
-                            android:textSize="18sp"
-                            android:paddingHorizontal="12dp"
-                            android:paddingVertical="4dp"
-                            android:background="@drawable/rating_badge_background"
-                            android:layout_marginEnd="16dp" />
+                            android:textSize="16sp" />
 
                         <TextView
-                            android:id="@+id/durationTextView"
+                            android:id="@+id/genre2TextView"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="1h 46m"
+                            android:layout_marginEnd="12dp"
+                            android:background="@drawable/genre_pill_background"
+                            android:paddingHorizontal="16dp"
+                            android:paddingVertical="8dp"
+                            android:text="Crime"
                             android:textColor="@android:color/white"
-                            android:textSize="20sp"
-                            android:layout_marginEnd="16dp" />
+                            android:textSize="16sp" />
 
-                        <!-- Genre Pills -->
                         <TextView
-                            android:id="@+id/genresTextView"
+                            android:id="@+id/genre3TextView"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Drama • Romance"
-                            android:textColor="@color/gray_light"
-                            android:textSize="20sp" />
+                            android:background="@drawable/genre_pill_background"
+                            android:paddingHorizontal="16dp"
+                            android:paddingVertical="8dp"
+                            android:text="Mystery"
+                            android:textColor="@android:color/white"
+                            android:textSize="16sp" />
 
                     </LinearLayout>
 
@@ -146,89 +154,59 @@
                         android:id="@+id/descriptionTextView"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="32dp"
-                        android:maxWidth="900dp"
-                        android:maxLines="3"
-                        android:ellipsize="end"
+                        android:layout_marginBottom="18dp"
                         android:lineSpacingExtra="4dp"
-                        android:text="Tessa Young is a dedicated student, dutiful daughter and loyal girlfriend to her high school sweetheart. Entering her first semester of college, Tessa's guarded world opens up when she meets Hardin Scott..."
-                        android:textColor="@android:color/white"
-                        android:textSize="20sp"
+                        android:maxWidth="900dp"
                         android:shadowColor="#80000000"
                         android:shadowDx="1"
                         android:shadowDy="1"
                         android:shadowRadius="4"
-                        android:focusable="false" />
+                        android:text="The original Four Horsemen reunite with a new generation of illusionists to take on powerful diamond heiress Veronika Vanderberg, who leads a criminal empire built on money laundering and trafficking. The new and old magicians must overcome their differences to work together on their most ambitious heist yet."
+                        android:textColor="@android:color/white"
+                        android:textSize="18sp" />
 
-                    <!-- Action Buttons Row -->
+                    <!-- Action Buttons -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:orientation="horizontal">
 
-                        <!-- Play Button - Primary CTA -->
+                        <!-- Play Now Button -->
                         <androidx.appcompat.widget.AppCompatButton
                             android:id="@+id/playButton"
                             android:layout_width="wrap_content"
-                            android:layout_height="64dp"
-                            android:minWidth="240dp"
+                            android:layout_height="56dp"
                             android:layout_marginEnd="16dp"
-
-                            android:background="@drawable/button_primary_selector"
-                            android:drawableStart="@drawable/ic_play"
+                            android:background="@drawable/play_button_background"
+                            android:drawableStart="@drawable/ic_play_white"
                             android:drawablePadding="12dp"
-                            android:text="Play"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:textAllCaps="false"
-                            android:gravity="center"
-                            android:paddingHorizontal="32dp"
                             android:focusable="true"
                             android:focusableInTouchMode="true"
+                            android:gravity="center"
+                            android:minWidth="200dp"
                             android:nextFocusRight="@id/favoriteButton"
-                            android:nextFocusDown="@id/creatorsTextView" />
-
-                        <!-- More Info Button -->
-                        <androidx.appcompat.widget.AppCompatButton
-                            android:id="@+id/moreInfoButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="64dp"
-                            android:minWidth="240dp"
-                            android:layout_marginEnd="16dp"
-                            android:background="@drawable/button_secondary_selector"
-                            android:drawableStart="@drawable/ic_info"
-                            android:drawablePadding="12dp"
-                            android:drawableTint="@android:color/white"
-                            android:text="More Info"
+                            android:nextFocusDown="@id/recommendationsRecyclerView"
+                            android:paddingHorizontal="28dp"
+                            android:text="Play Now"
+                            android:textAllCaps="false"
                             android:textColor="@android:color/white"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:textAllCaps="false"
-                            android:gravity="center"
-                            android:paddingHorizontal="32dp"
-                            android:focusable="true"
-                            android:focusableInTouchMode="true"
-                            android:nextFocusLeft="@id/playButton"
-                            android:nextFocusRight="@id/favoriteButton"
-                            android:nextFocusDown="@id/creatorsTextView"
-                            android:visibility="gone" />
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
 
-                        <!-- Favorite Button - Icon Only -->
+                        <!-- Add to List Button -->
                         <androidx.appcompat.widget.AppCompatButton
                             android:id="@+id/favoriteButton"
-                            android:layout_width="64dp"
-                            android:layout_height="64dp"
-                            android:visibility="gone"
-                            android:drawableStart="@drawable/ic_favorite_border"
-                            android:drawableTint="@android:color/white"
-                            android:padding="0dp"
-                            android:gravity="center"
-                            android:layout_gravity="center"
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
+                            android:background="@drawable/favorite_button_background"
                             android:focusable="true"
                             android:focusableInTouchMode="true"
+                            android:gravity="center"
                             android:nextFocusLeft="@id/playButton"
-                            android:nextFocusDown="@id/creatorsTextView" />
+                            android:nextFocusDown="@id/recommendationsRecyclerView"
+                            android:text="+"
+                            android:textColor="@android:color/white"
+                            android:textSize="28sp" />
 
                     </LinearLayout>
 
@@ -236,98 +214,22 @@
 
             </FrameLayout>
 
-            <!-- Details Section -->
+            <!-- Recommendations Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="48dp"
-                android:paddingTop="32dp">
+                android:padding="10dp"
+                android:orientation="vertical">
 
-                <!-- Cast & Crew Info Grid -->
-                <LinearLayout
-                    android:visibility="gone"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="48dp"
-                    android:orientation="horizontal">
-
-                    <!-- Stars Column -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="32dp"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Stars"
-                            android:textColor="@color/gray_light"
-                            android:textSize="16sp"
-                            android:layout_marginBottom="8dp"
-                            android:focusable="false" />
-
-                        <TextView
-                            android:id="@+id/starsTextView"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Josephine Langford, Hero Fiennes Tiffin"
-                            android:textColor="@android:color/white"
-                            android:textSize="18sp"
-                            android:focusable="true"
-                            android:focusableInTouchMode="true"
-                            android:nextFocusUp="@id/playButton"
-                            android:nextFocusRight="@id/creatorsTextView"
-                            android:nextFocusDown="@id/recommendationsRecyclerView" />
-
-                    </LinearLayout>
-
-                    <!-- Creators Column -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Creators"
-                            android:textColor="@color/gray_light"
-                            android:textSize="16sp"
-                            android:layout_marginBottom="8dp"
-                            android:focusable="false" />
-
-                        <TextView
-                            android:id="@+id/creatorsTextView"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Jenny Gage, Susan McMartin"
-                            android:textColor="@android:color/white"
-                            android:textSize="18sp"
-                            android:focusable="true"
-                            android:focusableInTouchMode="true"
-                            android:nextFocusUp="@id/playButton"
-                            android:nextFocusLeft="@id/starsTextView"
-                            android:nextFocusDown="@id/recommendationsRecyclerView" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <!-- Recommendations Section -->
                 <TextView
                     android:id="@+id/recommendationsTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="More Like This"
+                    android:layout_marginBottom="24dp"
+                    android:text="Others Also Watched"
                     android:textColor="@android:color/white"
                     android:textSize="28sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="24dp"
-                    android:focusable="false" />
+                    android:textStyle="bold" />
 
                 <ProgressBar
                     android:id="@+id/recommendationsLoadingBar"
@@ -341,10 +243,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:clipToPadding="false"
-                    android:paddingBottom="48dp"
                     android:focusable="true"
                     android:focusableInTouchMode="true"
-                    android:nextFocusUp="@id/starsTextView" />
+                    android:nextFocusUp="@id/playButton" />
 
             </LinearLayout>
 
@@ -358,16 +259,15 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#CC000000"
-        android:visibility="gone"
         android:clickable="true"
-        android:focusable="true">
+        android:visibility="gone">
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:orientation="vertical"
-            android:gravity="center">
+            android:gravity="center"
+            android:orientation="vertical">
 
             <ProgressBar
                 android:id="@+id/loadingProgressBar"
@@ -387,5 +287,42 @@
         </LinearLayout>
 
     </RelativeLayout>
+
+    <!-- Hidden fields for backward compatibility -->
+    <TextView
+        android:id="@+id/posterImageView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/genresTextView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/durationTextView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/ratingBadge"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/starsTextView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/creatorsTextView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
