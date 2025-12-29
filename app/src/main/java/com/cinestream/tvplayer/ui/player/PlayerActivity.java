@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
@@ -60,7 +61,7 @@ public class PlayerActivity extends AppCompatActivity {
     private ImageView subtitleButton;
     private TextView currentTimeTextView;
     private TextView totalTimeTextView;
-    private SeekBar seekBar; // Changed from ProgressBar to SeekBar
+    private SeekBar seekBar;
     private ProgressBar loadingProgressBar;
 
     // Managers and Dialogs
@@ -123,7 +124,7 @@ public class PlayerActivity extends AppCompatActivity {
         subtitleButton = findViewById(R.id.subtitleButton);
         currentTimeTextView = findViewById(R.id.currentTimeTextView);
         totalTimeTextView = findViewById(R.id.totalTimeTextView);
-        seekBar = findViewById(R.id.progressBar); // Change ID or cast
+        seekBar = findViewById(R.id.progressBar);
         loadingProgressBar = findViewById(R.id.loadingProgressBar);
 
         // Initialize dialogs
@@ -155,6 +156,9 @@ public class PlayerActivity extends AppCompatActivity {
         // Set up initial state
         updatePlayPauseButton(false); // Paused initially
         showControls();
+
+        // Request initial focus on play/pause button
+        playPauseButton.post(() -> playPauseButton.requestFocus());
     }
 
     private void setupClickListeners() {
@@ -164,6 +168,20 @@ public class PlayerActivity extends AppCompatActivity {
         qualityButton.setOnClickListener(v -> showQualityDialog());
         subtitleButton.setOnClickListener(v -> showSubtitleDialog());
 
+        // Add focus change listeners to show controls when navigating
+        View.OnFocusChangeListener focusListener = (v, hasFocus) -> {
+            if (hasFocus) {
+                showControls();
+            }
+        };
+
+        playPauseButton.setOnFocusChangeListener(focusListener);
+        rewindButton.setOnFocusChangeListener(focusListener);
+        fastForwardButton.setOnFocusChangeListener(focusListener);
+        qualityButton.setOnFocusChangeListener(focusListener);
+        subtitleButton.setOnFocusChangeListener(focusListener);
+        seekBar.setOnFocusChangeListener(focusListener);
+
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -171,7 +189,6 @@ public class PlayerActivity extends AppCompatActivity {
                     long duration = player.getDuration();
                     if (duration != C.TIME_UNSET) {
                         long seekTime = (duration * progress) / 100;
-                        player.seekTo(seekTime);
                         currentTimeTextView.setText(formatTime(seekTime));
                     }
                 }
@@ -185,6 +202,14 @@ public class PlayerActivity extends AppCompatActivity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+                // Actually seek when user releases
+                if (player != null) {
+                    long duration = player.getDuration();
+                    if (duration != C.TIME_UNSET) {
+                        long seekTime = (duration * seekBar.getProgress()) / 100;
+                        player.seekTo(seekTime);
+                    }
+                }
                 // Resume progress updates after seeking
                 startProgressUpdate();
                 showControls();
@@ -214,6 +239,7 @@ public class PlayerActivity extends AppCompatActivity {
                     case Player.STATE_ENDED:
                         updatePlayPauseButton(false);
                         stopProgressUpdate();
+                        showControls(); // Show controls when video ends
                         break;
                     case Player.STATE_IDLE:
                         // Player is idle
@@ -464,6 +490,36 @@ public class PlayerActivity extends AppCompatActivity {
         WindowInsetsControllerCompat controller = new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
         controller.hide(WindowInsetsCompat.Type.systemBars());
         controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        // Handle D-pad center/Enter key
+        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
+            if (!isControlsVisible) {
+                showControls();
+                return true;
+            }
+        }
+
+        // Handle media control keys
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+            case KeyEvent.KEYCODE_MEDIA_PLAY:
+            case KeyEvent.KEYCODE_MEDIA_PAUSE:
+                togglePlayPause();
+                return true;
+
+            case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+                fastForward();
+                return true;
+
+            case KeyEvent.KEYCODE_MEDIA_REWIND:
+                rewind();
+                return true;
+        }
+
+        return super.onKeyDown(keyCode, event);
     }
 
     @Override

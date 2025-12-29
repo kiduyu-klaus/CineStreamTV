@@ -10,8 +10,8 @@
         android:id="@+id/playerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
         app:resize_mode="fit"
         app:show_buffering="when_playing"
         app:use_controller="false" />
@@ -23,6 +23,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:focusable="false"
         android:visibility="gone" />
 
     <!-- Controls Layout -->
@@ -33,7 +34,9 @@
         android:layout_gravity="bottom"
         android:background="#80000000"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:focusable="false"
+        android:descendantFocusability="afterDescendants">
 
         <!-- Progress Bar -->
         <SeekBar
@@ -42,14 +45,19 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:progressTint="@color/cinema_red" />
+            android:progressDrawable="@drawable/seekbar_progress"
+            android:thumb="@drawable/seekbar_thumb"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:nextFocusDown="@id/playPauseButton" />
 
         <!-- Time Display -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:focusable="false">
 
             <TextView
                 android:id="@+id/currentTimeTextView"
@@ -57,7 +65,8 @@
                 android:layout_height="wrap_content"
                 android:text="00:00"
                 android:textColor="@android:color/white"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:focusable="false" />
 
             <TextView
                 android:layout_width="0dp"
@@ -66,7 +75,8 @@
                 android:gravity="center"
                 android:text="/"
                 android:textColor="@android:color/white"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:focusable="false" />
 
             <TextView
                 android:id="@+id/totalTimeTextView"
@@ -74,7 +84,8 @@
                 android:layout_height="wrap_content"
                 android:text="00:00"
                 android:textColor="@android:color/white"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:focusable="false" />
 
         </LinearLayout>
 
@@ -83,7 +94,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:focusable="false">
 
             <!-- Rewind Button -->
             <ImageView
@@ -94,8 +106,11 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:focusable="true"
+                android:focusableInTouchMode="true"
                 android:padding="8dp"
-                android:src="@drawable/ic_rewind" />
+                android:src="@drawable/ic_rewind"
+                android:nextFocusRight="@id/playPauseButton"
+                android:nextFocusUp="@id/progressBar" />
 
             <!-- Play/Pause Button -->
             <ImageView
@@ -106,8 +121,12 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:focusable="true"
+                android:focusableInTouchMode="true"
                 android:padding="8dp"
-                android:src="@drawable/ic_play" />
+                android:src="@drawable/ic_play"
+                android:nextFocusLeft="@id/rewindButton"
+                android:nextFocusRight="@id/fastForwardButton"
+                android:nextFocusUp="@id/progressBar" />
 
             <!-- Fast Forward Button -->
             <ImageView
@@ -118,14 +137,20 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:focusable="true"
+                android:focusableInTouchMode="true"
                 android:padding="8dp"
-                android:src="@drawable/ic_fastforward" />
+                android:src="@drawable/ic_fastforward"
+                android:nextFocusLeft="@id/playPauseButton"
+                android:nextFocusRight="@id/subtitleButton"
+                android:nextFocusUp="@id/progressBar" />
 
-            <!-- Settings Buttons -->
+            <!-- Spacer -->
             <View
                 android:layout_width="32dp"
-                android:layout_height="1dp" />
+                android:layout_height="1dp"
+                android:focusable="false" />
 
+            <!-- Settings Buttons -->
             <ImageView
                 android:id="@+id/subtitleButton"
                 android:layout_width="40dp"
@@ -134,8 +159,12 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:focusable="true"
+                android:focusableInTouchMode="true"
                 android:padding="8dp"
-                android:src="@drawable/ic_subtitles" />
+                android:src="@drawable/ic_subtitles"
+                android:nextFocusLeft="@id/fastForwardButton"
+                android:nextFocusRight="@id/qualityButton"
+                android:nextFocusUp="@id/progressBar" />
 
             <ImageView
                 android:id="@+id/qualityButton"
@@ -145,8 +174,11 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:focusable="true"
+                android:focusableInTouchMode="true"
                 android:padding="8dp"
-                android:src="@drawable/ic_settings" />
+                android:src="@drawable/ic_settings"
+                android:nextFocusLeft="@id/subtitleButton"
+                android:nextFocusUp="@id/progressBar" />
 
         </LinearLayout>
 
