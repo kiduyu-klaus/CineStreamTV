@@ -1,31 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/seasonContainer"
-    android:layout_width="match_parent"
+    android:id="@+id/seasonTabContainer"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp"
-    android:layout_marginBottom="8dp"
+    android:layout_marginEnd="12dp"
     android:focusable="true"
     android:clickable="true"
-    android:background="@drawable/season_normal_background">
+    android:background="@drawable/season_tab_normal">
 
     <TextView
         android:id="@+id/seasonName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Season 1"
-        android:textColor="@color/gray_light"
-        android:textSize="18sp"
+        android:textColor="@color/white"
+        android:textSize="16sp"
         android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/episodeCount"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="8 episodes"
-        android:textColor="@color/gray_light"
-        android:textSize="14sp" />
 
 </LinearLayout>

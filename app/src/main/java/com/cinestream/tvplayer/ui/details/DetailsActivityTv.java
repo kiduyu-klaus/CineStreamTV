@@ -14,6 +14,7 @@ import android.widget.Toast;
 import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.media3.common.util.UnstableApi;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -23,8 +24,8 @@ import com.cinestream.tvplayer.data.model.Episode;
 import com.cinestream.tvplayer.data.model.MediaItems;
 import com.cinestream.tvplayer.data.model.Season;
 import com.cinestream.tvplayer.data.repository.MediaRepository;
-import com.cinestream.tvplayer.ui.adapter.EpisodeAdapter;
-import com.cinestream.tvplayer.ui.adapter.SeasonAdapter;
+import com.cinestream.tvplayer.ui.adapter.EpisodeGridAdapter;
+import com.cinestream.tvplayer.ui.adapter.SeasonTabAdapter;
 import com.cinestream.tvplayer.ui.player.PlayerActivity;
 
 import java.util.ArrayList;
@@ -33,32 +34,37 @@ import java.util.List;
 public class DetailsActivityTv extends AppCompatActivity {
     private static final String TAG = "DetailsActivityTv";
 
-    // UI Components
+    // UI Components - Hero Section
     private ImageView backgroundImage;
+    private ImageView posterImage;
     private TextView titleText;
     private TextView yearText;
-    private TextView seasonsCountText;
-    private TextView genresText;
+    private TextView ratingText;
+    private TextView durationText;
+    private LinearLayout genresLayout;
     private TextView descriptionText;
-    private RecyclerView seasonsRecyclerView;
-    private RecyclerView episodesRecyclerView;
-    private TextView selectedSeasonTitle;
-    private TextView selectedEpisodeTitle;
-    private TextView selectedEpisodeDate;
-    private TextView selectedEpisodeDescription;
-    private ImageView selectedEpisodeThumbnail;
+    private TextView creatorsText;
+    private TextView starsText;
+    private Button watchButton;
+    private ImageView favoriteButton;
+
+    // Season Tabs
+    private RecyclerView seasonTabsRecyclerView;
+
+    // Episodes Grid
+    private RecyclerView episodesGridRecyclerView;
+
+    // Loading
     private ProgressBar loadingProgress;
-    private Button playButton;
 
     // Data
     private MediaItems tvShow;
     private List<Season> seasons = new ArrayList<>();
     private List<Episode> currentEpisodes = new ArrayList<>();
-    private SeasonAdapter seasonAdapter;
-    private EpisodeAdapter episodeAdapter;
+    private SeasonTabAdapter seasonTabAdapter;
+    private EpisodeGridAdapter episodeGridAdapter;
     private MediaRepository mediaRepository;
     private int selectedSeasonNumber = 1;
-    private Episode selectedEpisode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,71 +86,84 @@ public class DetailsActivityTv extends AppCompatActivity {
     }
 
     private void initializeViews() {
+        // Hero section
         backgroundImage = findViewById(R.id.backgroundImage);
+        posterImage = findViewById(R.id.posterImage);
         titleText = findViewById(R.id.titleText);
         yearText = findViewById(R.id.yearText);
-        seasonsCountText = findViewById(R.id.seasonsCountText);
-        genresText = findViewById(R.id.genresText);
+        ratingText = findViewById(R.id.ratingText);
+        durationText = findViewById(R.id.durationText);
+        genresLayout = findViewById(R.id.genresLayout);
         descriptionText = findViewById(R.id.descriptionText);
-        seasonsRecyclerView = findViewById(R.id.seasonsRecyclerView);
-        episodesRecyclerView = findViewById(R.id.episodesRecyclerView);
-        selectedSeasonTitle = findViewById(R.id.selectedSeasonTitle);
-        selectedEpisodeTitle = findViewById(R.id.selectedEpisodeTitle);
-        selectedEpisodeDate = findViewById(R.id.selectedEpisodeDate);
-        selectedEpisodeDescription = findViewById(R.id.selectedEpisodeDescription);
-        selectedEpisodeThumbnail = findViewById(R.id.selectedEpisodeThumbnail);
+        creatorsText = findViewById(R.id.creatorsText);
+        starsText = findViewById(R.id.starsText);
+        //watchButton = findViewById(R.id.watchButton);
+        favoriteButton = findViewById(R.id.favoriteButton);
+
+        // Season tabs and episodes
+        seasonTabsRecyclerView = findViewById(R.id.seasonTabsRecyclerView);
+        episodesGridRecyclerView = findViewById(R.id.episodesGridRecyclerView);
+
+        // Loading
         loadingProgress = findViewById(R.id.loadingProgress);
-        playButton = findViewById(R.id.playButton);
 
         // Set basic info
         titleText.setText(tvShow.getTitle());
         yearText.setText(String.valueOf(tvShow.getYear()));
         descriptionText.setText(tvShow.getDescription());
 
-        // Load background
-        String imageUrl = tvShow.getPrimaryImageUrl();
-        if (imageUrl != null && !imageUrl.isEmpty()) {
+        // Load images
+        String bgUrl = tvShow.getPrimaryImageUrl();
+        if (bgUrl != null && !bgUrl.isEmpty()) {
             Glide.with(this)
-                    .load(imageUrl)
+                    .load(bgUrl)
                     .centerCrop()
                     .into(backgroundImage);
         }
 
-        // Play button
-        playButton.setOnClickListener(v -> {
-            if (selectedEpisode != null) {
-                playEpisode(selectedEpisode);
-            } else {
-                Toast.makeText(this, "Please select an episode", Toast.LENGTH_SHORT).show();
-            }
+        String posterUrl = tvShow.getPosterUrl();
+        if (posterUrl != null && !posterUrl.isEmpty()) {
+            Glide.with(this)
+                    .load(posterUrl)
+                    .centerCrop()
+                    .into(posterImage);
+        }
+
+        // Watch button
+//        watchButton.setOnClickListener(v -> {
+//            if (!currentEpisodes.isEmpty()) {
+//                playEpisode(currentEpisodes.get(0));
+//            }
+//        });
+
+        // Favorite button
+        favoriteButton.setOnClickListener(v -> {
+            Toast.makeText(this, "Added to favorites", Toast.LENGTH_SHORT).show();
         });
     }
 
     private void setupRecyclerViews() {
-        // Seasons RecyclerView
-        LinearLayoutManager seasonsLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        seasonsRecyclerView.setLayoutManager(seasonsLayoutManager);
+        // Season tabs - horizontal
+        LinearLayoutManager tabsLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        seasonTabsRecyclerView.setLayoutManager(tabsLayoutManager);
 
-        seasonAdapter = new SeasonAdapter(seasons);
-        seasonsRecyclerView.setAdapter(seasonAdapter);
+        seasonTabAdapter = new SeasonTabAdapter(seasons);
+        seasonTabsRecyclerView.setAdapter(seasonTabAdapter);
 
-        seasonAdapter.setOnSeasonClickListener(season -> {
+        seasonTabAdapter.setOnSeasonClickListener((season, position) -> {
             selectedSeasonNumber = season.getSeasonNumber();
-            seasonAdapter.setSelectedSeason(selectedSeasonNumber);
+            seasonTabAdapter.setSelectedPosition(position);
             loadEpisodes(selectedSeasonNumber);
         });
 
-        // Episodes RecyclerView
-        LinearLayoutManager episodesLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        episodesRecyclerView.setLayoutManager(episodesLayoutManager);
+        // Episodes grid - 4 columns
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 4);
+        episodesGridRecyclerView.setLayoutManager(gridLayoutManager);
 
-        episodeAdapter = new EpisodeAdapter(currentEpisodes);
-        episodesRecyclerView.setAdapter(episodeAdapter);
+        episodeGridAdapter = new EpisodeGridAdapter(currentEpisodes);
+        episodesGridRecyclerView.setAdapter(episodeGridAdapter);
 
-        episodeAdapter.setOnEpisodeClickListener(episode -> {
-            selectedEpisode = episode;
-            updateSelectedEpisodeInfo(episode);
-        });
+        episodeGridAdapter.setOnEpisodeClickListener(this::playEpisode);
     }
 
     private void loadTvShowDetails() {
@@ -155,22 +174,20 @@ public class DetailsActivityTv extends AppCompatActivity {
             public void onSuccess(MediaItems detailedShow, List<Season> seasonsList) {
                 loadingProgress.setVisibility(View.GONE);
 
-                // Update UI with detailed info
                 tvShow = detailedShow;
                 seasons.clear();
                 seasons.addAll(seasonsList);
 
-                // Update basic info
-                seasonsCountText.setText(seasonsList.size() + " seasons");
-                genresText.setText(detailedShow.getGenresAsString());
+                // Update UI
+                updateDetailedInfo(detailedShow);
 
-                // Notify adapter
-                seasonAdapter.notifyDataSetChanged();
+                // Update season tabs
+                seasonTabAdapter.notifyDataSetChanged();
 
-                // Auto-select first season
+                // Load first season
                 if (!seasons.isEmpty()) {
                     selectedSeasonNumber = seasons.get(0).getSeasonNumber();
-                    seasonAdapter.setSelectedSeason(selectedSeasonNumber);
+                    seasonTabAdapter.setSelectedPosition(0);
                     loadEpisodes(selectedSeasonNumber);
                 }
             }
@@ -184,12 +201,48 @@ public class DetailsActivityTv extends AppCompatActivity {
         });
     }
 
+    private void updateDetailedInfo(MediaItems show) {
+        // Rating
+        if (show.getRating() > 0) {
+            ratingText.setText(String.format("%.1f", show.getRating()));
+            ratingText.setVisibility(View.VISIBLE);
+        }
+
+        // Duration
+        if (show.getDuration() != null && !show.getDuration().isEmpty()) {
+            durationText.setText(show.getDuration());
+        }
+
+        // Genres as chips
+        genresLayout.removeAllViews();
+        if (show.getGenres() != null && !show.getGenres().isEmpty()) {
+            for (String genre : show.getGenres()) {
+                TextView genreChip = new TextView(this);
+                genreChip.setText(genre);
+                genreChip.setTextColor(getColor(R.color.white));
+                genreChip.setBackgroundResource(R.drawable.genre_chip_background);
+                genreChip.setPadding(24, 12, 24, 12);
+
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+                params.setMarginEnd(12);
+                genreChip.setLayoutParams(params);
+
+                genresLayout.addView(genreChip);
+            }
+        }
+
+        // Creators and Stars (placeholder)
+        creatorsText.setText("Lampton Enochs, Rand Ge...");
+        starsText.setText("Millie Bobby Brown, Finn...");
+    }
+
     private void loadEpisodes(int seasonNumber) {
         loadingProgress.setVisibility(View.VISIBLE);
         currentEpisodes.clear();
-        episodeAdapter.notifyDataSetChanged();
-
-        selectedSeasonTitle.setText("Season " + seasonNumber);
+        episodeGridAdapter.notifyDataSetChanged();
 
         mediaRepository.getSeasonEpisodes(tvShow.getTmdbId(), seasonNumber, new MediaRepository.EpisodesCallback() {
             @Override
@@ -198,14 +251,7 @@ public class DetailsActivityTv extends AppCompatActivity {
 
                 currentEpisodes.clear();
                 currentEpisodes.addAll(episodes);
-                episodeAdapter.notifyDataSetChanged();
-
-                // Auto-select first episode
-                if (!episodes.isEmpty()) {
-                    selectedEpisode = episodes.get(0);
-                    episodeAdapter.setSelectedEpisode(0);
-                    updateSelectedEpisodeInfo(episodes.get(0));
-                }
+                episodeGridAdapter.notifyDataSetChanged();
             }
 
             @Override
@@ -217,22 +263,7 @@ public class DetailsActivityTv extends AppCompatActivity {
         });
     }
 
-    private void updateSelectedEpisodeInfo(Episode episode) {
-        selectedEpisodeTitle.setText(episode.getName());
-        selectedEpisodeDate.setText(episode.getAirDate());
-        selectedEpisodeDescription.setText(episode.getOverview());
-
-        // Load episode thumbnail
-        if (episode.getStillPath() != null && !episode.getStillPath().isEmpty()) {
-            Glide.with(this)
-                    .load(episode.getStillPath())
-                    .centerCrop()
-                    .into(selectedEpisodeThumbnail);
-        }
-    }
-
     private void playEpisode(Episode episode) {
-        // Create MediaItems for the episode
         MediaItems episodeMedia = new MediaItems();
         episodeMedia.setTitle(tvShow.getTitle());
         episodeMedia.setDescription(episode.getOverview());
@@ -244,6 +275,7 @@ public class DetailsActivityTv extends AppCompatActivity {
         episodeMedia.setPosterUrl(episode.getStillPath());
         episodeMedia.setFromTMDB(true);
 
+
         String season = episodeMedia.getSeason() != null ? episodeMedia.getSeason() : "1";
         String episode1 = episodeMedia.getEpisode() != null ? episodeMedia.getEpisode() : "1";
 
@@ -252,7 +284,7 @@ public class DetailsActivityTv extends AppCompatActivity {
                     @OptIn(markerClass = UnstableApi.class) @Override
                     public void onSuccess(MediaItems updatedItem) {
                         //loadingOverlay.setVisibility(View.GONE);
-                        playButton.setEnabled(true);
+                        //playButton.setEnabled(true);
 
                         // Update current media item with video sources
                         episodeMedia.setVideoSources(updatedItem.getVideoSources());
@@ -269,7 +301,7 @@ public class DetailsActivityTv extends AppCompatActivity {
                     @Override
                     public void onError(String error) {
                         //loadingOverlay.setVisibility(View.GONE);
-                        playButton.setEnabled(true);
+                        //playButton.setEnabled(true);
 
                         Toast.makeText(DetailsActivityTv.this,
                                 "Failed to fetch video sources: " + error,
@@ -279,10 +311,7 @@ public class DetailsActivityTv extends AppCompatActivity {
                     }
                 });
 
-
     }
-
-
 
     @Override
     protected void onDestroy() {

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,7 +30,7 @@ public class ServerSelectionDialog extends DialogFragment {
     private ListView serversListView;
     private ServerAdapter serverAdapter;
     private List<ServerItem> serverItems;
-    private List<MediaItems.VideoSource> videoSources;
+    private MediaItems mediaItem;
     private int currentSelectedIndex = 0;
 
     public interface OnServerSelectedListener {
@@ -37,13 +38,21 @@ public class ServerSelectionDialog extends DialogFragment {
     }
 
     private OnServerSelectedListener listener;
+    private View.OnClickListener viewClickListener;
 
     public void setOnServerSelectedListener(OnServerSelectedListener listener) {
         this.listener = listener;
     }
+    public void ViewClickListener(View.OnClickListener viewClickListener) {
+        //Log.i("PlayerActivity", "ViewClickListener: clicked"+serverAdapter.getSelectedPosition());
+       //serverAdapter.setSelectedPosition(currentSelectedIndex);
+        //Log.i("PlayerActivity", "ViewClickListener: "+serverAdapter.getSelectedPosition());
+        this.viewClickListener = viewClickListener;
+    }
 
-    public void setVideoSources(List<MediaItems.VideoSource> sources) {
-        this.videoSources = sources;
+
+    public void setMediaItem(MediaItems mediaItem) {
+        this.mediaItem = mediaItem;
     }
 
     @NonNull
@@ -79,43 +88,60 @@ public class ServerSelectionDialog extends DialogFragment {
     private void setupList() {
         serverItems = new ArrayList<>();
 
-        // Add servers from video sources if available
-        if (videoSources != null && !videoSources.isEmpty()) {
-            char serverLetter = 'A';
-            int serverNumber = 1;
+        // Determine if it's a movie
+        boolean isMovie = mediaItem != null && "movie".equals(mediaItem.getMediaType().toLowerCase());
 
-            for (MediaItems.VideoSource source : videoSources) {
-                String quality = source.getQuality();
-                String serverName = "Server " + serverLetter + serverNumber + " - " + quality;
-                serverItems.add(new ServerItem(serverName, source.getUrl(), quality));
+        // Neon servers
+        serverItems.add(new ServerItem("Neon (Primary)", "https://api.videasy.net/myflixerzupcloud/sources-with-title", "Original", true));
+        serverItems.add(new ServerItem("Neon (Backup)", "https://api2.videasy.net/myflixerzupcloud/sources-with-title", "Original", true));
 
-                serverNumber++;
-                if (serverNumber > 3) {
-                    serverNumber = 1;
-                    serverLetter++;
-                }
-            }
+        // Sage servers
+        serverItems.add(new ServerItem("Sage (Primary)", "https://api.videasy.net/1movies/sources-with-title", "Original", true));
+        serverItems.add(new ServerItem("Sage (Backup)", "https://api2.videasy.net/1movies/sources-with-title", "Original", true));
+
+        // Cypher servers
+        serverItems.add(new ServerItem("Cypher (Primary)", "https://api.videasy.net/moviebox/sources-with-title", "Original", true));
+        serverItems.add(new ServerItem("Cypher (Backup)", "https://api2.videasy.net/moviebox/sources-with-title", "Original", true));
+
+        // Yoru servers (Movies only)
+        if (isMovie) {
+            serverItems.add(new ServerItem("Yoru (Primary)", "https://api.videasy.net/cdn/sources-with-title", "Original", true));
+            serverItems.add(new ServerItem("Yoru (Backup)", "https://api2.videasy.net/cdn/sources-with-title", "Original", true));
         }
 
-        // If no servers, add default message
-        if (serverItems.isEmpty()) {
-            serverItems.add(new ServerItem("No servers available", "", ""));
-        }
+        // Reyna servers
+        serverItems.add(new ServerItem("Reyna (Primary)", "https://api.videasy.net/primewire/sources-with-title", "Original", true));
+        serverItems.add(new ServerItem("Reyna (Backup)", "https://api2.videasy.net/primewire/sources-with-title", "Original", true));
+
+        // Omen servers
+        serverItems.add(new ServerItem("Omen (Primary)", "https://api.videasy.net/onionplay/sources-with-title", "Original", true));
+        serverItems.add(new ServerItem("Omen (Backup)", "https://api2.videasy.net/onionplay/sources-with-title", "Original", true));
+
+        // Breach servers
+        serverItems.add(new ServerItem("Breach (Primary)", "https://api.videasy.net/m4uhd/sources-with-title", "Original", true));
+        serverItems.add(new ServerItem("Breach (Backup)", "https://api2.videasy.net/m4uhd/sources-with-title", "Original", true));
+
+        // Vyse servers
+        serverItems.add(new ServerItem("Vyse (Primary)", "https://api.videasy.net/hdmovie/sources-with-title", "Original", true));
+        serverItems.add(new ServerItem("Vyse (Backup)", "https://api2.videasy.net/hdmovie/sources-with-title", "Original", true));
 
         serverAdapter = new ServerAdapter(getContext(), serverItems, currentSelectedIndex);
         serversListView.setAdapter(serverAdapter);
 
         serversListView.setSelection(currentSelectedIndex);
-        serversListView.requestFocus();
 
+        // Set up click listener
         serversListView.setOnItemClickListener((parent, view, position, id) -> {
             ServerItem selectedServer = serverItems.get(position);
+            Log.i("PlayerActivity", "ViewClickListener: clicked");
 
-            if (selectedServer.getUrl().isEmpty()) {
-                return; // Don't process empty servers
+            if (!selectedServer.isAvailable() || selectedServer.getUrl().isEmpty()) {
+                return; // Don't process unavailable servers
             }
 
             currentSelectedIndex = position;
+            serverAdapter.setSelectedPosition(position);
+            serverAdapter.notifyDataSetChanged();
 
             if (listener != null) {
                 listener.onServerSelected(selectedServer);
@@ -123,17 +149,27 @@ public class ServerSelectionDialog extends DialogFragment {
 
             dismiss();
         });
+
+        // Request focus after a short delay to ensure the list is ready
+        serversListView.postDelayed(() -> {
+            serversListView.requestFocus();
+            if (serversListView.getChildCount() > 0) {
+                serversListView.getChildAt(0).requestFocus();
+            }
+        }, 100);
     }
 
     public static class ServerItem {
         private String name;
         private String url;
-        private String quality;
+        private String language;
+        private boolean available;
 
-        public ServerItem(String name, String url, String quality) {
+        public ServerItem(String name, String url, String language, boolean available) {
             this.name = name;
             this.url = url;
-            this.quality = quality;
+            this.language = language;
+            this.available = available;
         }
 
         public String getName() {
@@ -144,8 +180,12 @@ public class ServerSelectionDialog extends DialogFragment {
             return url;
         }
 
-        public String getQuality() {
-            return quality;
+        public String getLanguage() {
+            return language;
+        }
+
+        public boolean isAvailable() {
+            return available;
         }
     }
 
@@ -155,6 +195,10 @@ public class ServerSelectionDialog extends DialogFragment {
         public ServerAdapter(Context context, List<ServerItem> items, int selectedPosition) {
             super(context, R.layout.item_server, items);
             this.selectedPosition = selectedPosition;
+        }
+
+        public void setSelectedPosition(int position) {
+            this.selectedPosition = position;
         }
 
         @Override
@@ -168,22 +212,35 @@ public class ServerSelectionDialog extends DialogFragment {
             TextView titleTextView = convertView.findViewById(R.id.titleTextView);
             ImageView radioButton = convertView.findViewById(R.id.radioButton);
 
-            titleTextView.setText(serverItem.getName());
+            if (serverItem != null) {
+                titleTextView.setText(serverItem.getName());
 
-            // Update radio button based on selection
-            if (position == selectedPosition) {
-                radioButton.setImageResource(R.drawable.radio_button_selected);
-            } else {
-                radioButton.setImageResource(R.drawable.radio_button_unselected);
-            }
+                // Update radio button based on selection
+                if (position == selectedPosition) {
+                    radioButton.setImageResource(R.drawable.radio_button_selected);
+                } else {
+                    radioButton.setImageResource(R.drawable.radio_button_unselected);
+                }
 
-            // Disable if no URL
-            if (serverItem.getUrl().isEmpty()) {
-                titleTextView.setAlpha(0.5f);
-                radioButton.setVisibility(View.GONE);
+                // Disable if not available
+                if (!serverItem.isAvailable() || serverItem.getUrl().isEmpty()) {
+                    titleTextView.setAlpha(0.5f);
+                    radioButton.setVisibility(View.GONE);
+                    convertView.setEnabled(false);
+                    convertView.setClickable(false);
+                } else {
+                    titleTextView.setAlpha(1.0f);
+                    radioButton.setVisibility(View.VISIBLE);
+                    convertView.setEnabled(true);
+                    convertView.setClickable(true);
+                }
             }
 
             return convertView;
+        }
+
+        public String getSelectedPosition() {
+            return getItem(selectedPosition).getName();
         }
     }
 }

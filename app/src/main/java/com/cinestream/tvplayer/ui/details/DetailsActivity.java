@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
+import androidx.media3.common.util.UnstableApi;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,6 +25,7 @@ import com.cinestream.tvplayer.ui.player.PlayerActivity;
 
 import java.util.List;
 
+@UnstableApi
 public class DetailsActivity extends AppCompatActivity {
     private static final String TAG = "DetailsActivity";
     private MediaItems mediaItems;
@@ -97,11 +99,11 @@ public class DetailsActivity extends AppCompatActivity {
                     .into(backdropImageView);
         }
         /**if (mediaItems.getPosterUrl() != null) {
-            Glide.with(this)
-                    .load(mediaItems.getPosterUrl())
-                    .centerCrop()
-                    .into(posterImageView);
-        }**/
+         Glide.with(this)
+         .load(mediaItems.getPosterUrl())
+         .centerCrop()
+         .into(posterImageView);
+         }**/
         titleTextView.setText(mediaItems.getTitle());
         descriptionTextView.setText(mediaItems.getDescription());
 
@@ -187,7 +189,7 @@ public class DetailsActivity extends AppCompatActivity {
     private void setupClickListeners() {
         playButton.setOnClickListener(v -> {
             // Check if we need to fetch video sources
-                fetchVideoSources();
+            fetchVideoSources();
 
         });
 
@@ -208,74 +210,40 @@ public class DetailsActivity extends AppCompatActivity {
         String mediaType = mediaItems.getMediaType();
 
         Log.d(TAG, "Fetching video sources for: " + title + " (" + year + ") [" + tmdbId + "]");
-        Log.i(TAG, "fetchVideoSources: "+ title + " (" + year + ") [" + tmdbId + "]");
+        Log.i(TAG, "fetchVideoSources: " + title + " (" + year + ") [" + tmdbId + "]");
 
-        if ("tv".equals(mediaType.toLowerCase())) {
-            // For TV shows - you'll need season/episode data
-            String season = mediaItems.getSeason() != null ? mediaItems.getSeason() : "1";
-            String episode = mediaItems.getEpisode() != null ? mediaItems.getEpisode() : "1";
 
-            mediaRepository.fetchVideasyStreamsTV(title, year, tmdbId, season, episode,
-                    new MediaRepository.VideasyCallback() {
-                        @Override
-                        public void onSuccess(MediaItems updatedItem) {
-                            loadingOverlay.setVisibility(View.GONE);
-                            playButton.setEnabled(true);
+        // For movies
+        mediaRepository.fetchVideasyStreamsMovie(title, year, tmdbId,
+                new MediaRepository.VideasyCallback() {
+                    @Override
+                    public void onSuccess(MediaItems updatedItem) {
+                        loadingOverlay.setVisibility(View.GONE);
+                        playButton.setEnabled(true);
 
-                            // Update current media item with video sources
-                            mediaItems.setVideoSources(updatedItem.getVideoSources());
-                            mediaItems.setSubtitles(updatedItem.getSubtitles());
+                        // Update current media item with video sources
+                        mediaItems.setVideoSources(updatedItem.getVideoSources());
+                        mediaItems.setSubtitles(updatedItem.getSubtitles());
 
-                            Log.i(TAG, "Video sources fetched: " +
-                                    mediaItems.getVideoSources().size());
+                        Log.d(TAG, "Video sources fetched: " +
+                                mediaItems.getVideoSources().size());
 
-                            launchPlayer();
-                        }
+                        launchPlayer();
+                    }
 
-                        @Override
-                        public void onError(String error) {
-                            loadingOverlay.setVisibility(View.GONE);
-                            playButton.setEnabled(true);
+                    @Override
+                    public void onError(String error) {
+                        loadingOverlay.setVisibility(View.GONE);
+                        playButton.setEnabled(true);
 
-                            Toast.makeText(DetailsActivity.this,
-                                    "Failed to fetch video sources: " + error,
-                                    Toast.LENGTH_LONG).show();
+                        Toast.makeText(DetailsActivity.this,
+                                "Failed to fetch video sources: " + error,
+                                Toast.LENGTH_LONG).show();
 
-                            Log.e(TAG, "Error fetching video sources: " + error);
-                        }
-                    });
-        } else {
-            // For movies
-            mediaRepository.fetchVideasyStreamsMovie(title, year, tmdbId,
-                    new MediaRepository.VideasyCallback() {
-                        @Override
-                        public void onSuccess(MediaItems updatedItem) {
-                            loadingOverlay.setVisibility(View.GONE);
-                            playButton.setEnabled(true);
+                        Log.e(TAG, "Error fetching video sources: " + error);
+                    }
+                });
 
-                            // Update current media item with video sources
-                            mediaItems.setVideoSources(updatedItem.getVideoSources());
-                            mediaItems.setSubtitles(updatedItem.getSubtitles());
-
-                            Log.d(TAG, "Video sources fetched: " +
-                                    mediaItems.getVideoSources().size());
-
-                            launchPlayer();
-                        }
-
-                        @Override
-                        public void onError(String error) {
-                            loadingOverlay.setVisibility(View.GONE);
-                            playButton.setEnabled(true);
-
-                            Toast.makeText(DetailsActivity.this,
-                                    "Failed to fetch video sources: " + error,
-                                    Toast.LENGTH_LONG).show();
-
-                            Log.e(TAG, "Error fetching video sources: " + error);
-                        }
-                    });
-        }
     }
 
     private void launchPlayer() {

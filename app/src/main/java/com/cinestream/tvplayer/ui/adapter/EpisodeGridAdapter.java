@@ -15,17 +15,16 @@ import com.cinestream.tvplayer.data.model.Episode;
 
 import java.util.List;
 
-public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeViewHolder> {
+public class EpisodeGridAdapter extends RecyclerView.Adapter<EpisodeGridAdapter.EpisodeGridViewHolder> {
 
     private List<Episode> episodes;
     private OnEpisodeClickListener listener;
-    private int selectedPosition = 0;
 
     public interface OnEpisodeClickListener {
         void onEpisodeClick(Episode episode);
     }
 
-    public EpisodeAdapter(List<Episode> episodes) {
+    public EpisodeGridAdapter(List<Episode> episodes) {
         this.episodes = episodes;
     }
 
@@ -33,25 +32,18 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeV
         this.listener = listener;
     }
 
-    public void setSelectedEpisode(int position) {
-        int previousPosition = selectedPosition;
-        selectedPosition = position;
-        notifyItemChanged(previousPosition);
-        notifyItemChanged(selectedPosition);
-    }
-
     @NonNull
     @Override
-    public EpisodeViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public EpisodeGridViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_episode, parent, false);
-        return new EpisodeViewHolder(view);
+                .inflate(R.layout.item_episode_grid, parent, false);
+        return new EpisodeGridViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull EpisodeViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull EpisodeGridViewHolder holder, int position) {
         Episode episode = episodes.get(position);
-        holder.bind(episode, position == selectedPosition);
+        holder.bind(episode);
     }
 
     @Override
@@ -59,22 +51,18 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeV
         return episodes.size();
     }
 
-    class EpisodeViewHolder extends RecyclerView.ViewHolder {
+    class EpisodeGridViewHolder extends RecyclerView.ViewHolder {
         ImageView episodeThumbnail;
-        ImageView playIcon;
         TextView episodeTitle;
-        TextView episodeDate;
-        TextView episodeDescription;
-        View container;
+        TextView ratingBadge;
+        TextView newEpisodeBadge;
 
-        EpisodeViewHolder(@NonNull View itemView) {
+        EpisodeGridViewHolder(@NonNull View itemView) {
             super(itemView);
             episodeThumbnail = itemView.findViewById(R.id.episodeThumbnail);
-            playIcon = itemView.findViewById(R.id.playIcon);
             episodeTitle = itemView.findViewById(R.id.episodeTitle);
-            episodeDate = itemView.findViewById(R.id.episodeDate);
-            episodeDescription = itemView.findViewById(R.id.episodeDescription);
-            container = itemView.findViewById(R.id.episodeContainer);
+            ratingBadge = itemView.findViewById(R.id.ratingBadge);
+            newEpisodeBadge = itemView.findViewById(R.id.newEpisodeBadge);
 
             itemView.setOnClickListener(v -> {
                 int position = getAdapterPosition();
@@ -85,29 +73,45 @@ public class EpisodeAdapter extends RecyclerView.Adapter<EpisodeAdapter.EpisodeV
 
             itemView.setFocusable(true);
             itemView.setFocusableInTouchMode(true);
+
+            // Focus change listener for scale animation
+            itemView.setOnFocusChangeListener((v, hasFocus) -> {
+                if (hasFocus) {
+                    v.animate().scaleX(1.1f).scaleY(1.1f).setDuration(200).start();
+                } else {
+                    v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start();
+                }
+            });
         }
 
-        void bind(Episode episode, boolean isSelected) {
-            episodeTitle.setText(episode.getEpisodeTitle());
-            episodeDate.setText(episode.getAirDate());
-            episodeDescription.setText(episode.getOverview());
+        void bind(Episode episode) {
+            // Episode title format: "E1: Chapter One: The Hellfire Club"
+            String title = "E" + episode.getEpisodeNumber() + ": " + episode.getName();
+            episodeTitle.setText(title);
 
             // Load thumbnail
             if (episode.getStillPath() != null && !episode.getStillPath().isEmpty()) {
                 Glide.with(itemView.getContext())
                         .load(episode.getStillPath())
                         .centerCrop()
+                        .placeholder(R.drawable.placeholder_episode)
                         .into(episodeThumbnail);
             }
 
-            // Show/hide play icon based on selection
-            playIcon.setVisibility(isSelected ? View.VISIBLE : View.GONE);
-
-            // Highlight selected episode
-            if (isSelected) {
-                container.setBackgroundResource(R.drawable.episode_selected_background);
+            // Rating badge
+            if (episode.getVoteAverage() > 0) {
+                ratingBadge.setText(String.format("⭐ %.1f", episode.getVoteAverage()));
+                ratingBadge.setVisibility(View.VISIBLE);
             } else {
-                container.setBackgroundResource(R.drawable.episode_normal_background);
+                ratingBadge.setVisibility(View.GONE);
+            }
+
+            // Show "New Episode" badge for recent episodes (placeholder logic)
+            // You can implement actual date checking here
+            if (episode.getEpisodeNumber() <= 2) {
+                newEpisodeBadge.setVisibility(View.VISIBLE);
+            } else {
+                newEpisodeBadge.setVisibility(View.GONE);
             }
         }
     }

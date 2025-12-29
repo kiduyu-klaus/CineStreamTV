@@ -222,13 +222,13 @@ public class SubtitleSelectionDialog extends DialogFragment {
                     trackSelector.setParameters(
                             trackSelector.buildUponParameters()
                                     .setPreferredTextLanguage(null)
-                                    .setDisabledTextTrackSelectionFlags(C.SELECTION_FLAG_DEFAULT)
+                                    .setIgnoredTextSelectionFlags(C.SELECTION_FLAG_DEFAULT)
                     );
                 } else {
                     trackSelector.setParameters(
                             trackSelector.buildUponParameters()
                                     .setPreferredTextLanguage(subtitleItem.getValue())
-                                    .setDisabledTextTrackSelectionFlags(0)
+                                    .setIgnoredTextSelectionFlags(0)
                     );
                 }
             } catch (Exception e) {

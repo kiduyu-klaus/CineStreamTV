@@ -830,6 +830,135 @@ public class MediaRepository {
         });
     }
 
+    // Add this method to your MediaRepository.java class
+
+    /**
+     * Fetch streams from a specific server URL
+     * @param serverUrl The server API endpoint URL
+     * @param title Media title
+     * @param year Release year
+     * @param tmdbId TMDB ID
+     * @param mediaType "movie" or "tv"
+     * @param season Season number (for TV shows)
+     * @param episode Episode number (for TV shows)
+     * @param callback Callback to return updated MediaItems with video sources
+     */
+    public void fetchStreamsFromServer(String serverUrl, String title, String year,
+                                       String tmdbId, String mediaType,
+                                       String season, String episode,
+                                       VideasyCallback callback) {
+        executorService.execute(() -> {
+            try {
+                // Step 1: Build the API URL with parameters
+                String encodedTitle = URLEncoder.encode(title, "UTF-8");
+                StringBuilder urlBuilder = new StringBuilder(serverUrl);
+                urlBuilder.append("?title=").append(encodedTitle);
+                urlBuilder.append("&mediaType=").append(mediaType);
+                urlBuilder.append("&year=").append(year);
+                urlBuilder.append("&tmdbId=").append(tmdbId);
+
+                // Add season and episode for TV shows
+                if ("tv".equals(mediaType) && season != null && episode != null) {
+                    urlBuilder.append("&seasonId=").append(season);
+                    urlBuilder.append("&episodeId=").append(episode);
+                }
+
+                String finalUrl = urlBuilder.toString();
+                Log.d(TAG, "Fetching from server: " + finalUrl);
+
+                // Step 2: Get encrypted data from the server
+                Connection.Response encResponse = Jsoup.connect(finalUrl)
+                        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                        .header("Connection", "keep-alive")
+                        .ignoreContentType(true)
+                        .timeout(TIMEOUT_MS)
+                        .method(Connection.Method.GET)
+                        .execute();
+
+                if (encResponse.statusCode() != 200) {
+                    throw new IOException("Server API returned status: " + encResponse.statusCode());
+                }
+
+                String encryptedData = encResponse.body();
+                Log.d(TAG, "Encrypted data received from server");
+
+                // Step 3: Decrypt the data
+                JSONObject decryptPayload = new JSONObject();
+                decryptPayload.put("text", encryptedData);
+                decryptPayload.put("id", tmdbId);
+
+                Connection.Response decResponse = Jsoup.connect(DECRYPT_API)
+                        .header("Content-Type", "application/json")
+                        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                        .ignoreContentType(true)
+                        .requestBody(decryptPayload.toString())
+                        .timeout(TIMEOUT_MS)
+                        .method(Connection.Method.POST)
+                        .execute();
+
+                if (decResponse.statusCode() != 200) {
+                    throw new IOException("Decrypt API returned status: " + decResponse.statusCode());
+                }
+
+                JSONObject decryptedResponse = new JSONObject(decResponse.body());
+                String decryptedDataStr = decryptedResponse.getString("result");
+
+                Log.d(TAG, "Decrypted data from server");
+
+                // Step 4: Parse the decrypted JSON
+                JSONObject streamData = new JSONObject(decryptedDataStr);
+
+                List<MediaItems.VideoSource> videoSources = new ArrayList<>();
+                List<MediaItems.SubtitleItem> subtitles = new ArrayList<>();
+
+                // Parse video sources
+                if (streamData.has("sources")) {
+                    JSONArray sourcesArray = streamData.getJSONArray("sources");
+                    for (int i = 0; i < sourcesArray.length(); i++) {
+                        JSONObject sourceObj = sourcesArray.getJSONObject(i);
+                        String quality = sourceObj.optString("quality", "Unknown");
+                        String url = sourceObj.optString("url", "");
+
+                        if (!url.isEmpty()) {
+                            videoSources.add(new MediaItems.VideoSource(quality, url));
+                            Log.d(TAG, "Added source: " + quality + " - " + url);
+                        }
+                    }
+                }
+
+                // Parse subtitles
+                if (streamData.has("subtitles")) {
+                    JSONArray subtitlesArray = streamData.getJSONArray("subtitles");
+                    for (int i = 0; i < subtitlesArray.length(); i++) {
+                        JSONObject subObj = subtitlesArray.getJSONObject(i);
+                        String url = subObj.optString("url", "");
+                        String lang = subObj.optString("lang", "Unknown");
+                        String language = subObj.optString("language", lang);
+
+                        if (!url.isEmpty()) {
+                            subtitles.add(new MediaItems.SubtitleItem(url, lang, language));
+                        }
+                    }
+                }
+
+                // Create updated MediaItems with video sources
+                MediaItems updatedItem = new MediaItems();
+                updatedItem.setVideoSources(videoSources);
+                updatedItem.setSubtitles(subtitles);
+
+                Log.d(TAG, "Successfully fetched " + videoSources.size() +
+                        " video sources and " + subtitles.size() + " subtitles from server");
+
+                // Return on main thread
+                mainHandler.post(() -> callback.onSuccess(updatedItem));
+
+            } catch (Exception e) {
+                Log.e(TAG, "Error fetching streams from server", e);
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
     /**
      * Clean up resources
      */

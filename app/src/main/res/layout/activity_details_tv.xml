@@ -3,15 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#1a1a2e">
+    android:background="#000000">
 
-    <!-- Background Image with Gradient -->
+    <!-- Background Image -->
     <ImageView
         android:id="@+id/backgroundImage"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:scaleType="centerCrop"
-        android:alpha="0.3"
+        android:alpha="0.4"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -27,200 +27,237 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Main Content -->
-    <LinearLayout
+    <!-- Scrollable Content -->
+    <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:orientation="horizontal"
-        android:padding="48dp"
+        android:fillViewport="true"
+        android:scrollbars="none"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <!-- Left Side - Show Info & Seasons -->
         <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="0.4"
-            android:orientation="vertical">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="48dp">
 
-            <!-- Title -->
-            <TextView
-                android:id="@+id/titleText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Stranger Things"
-                android:textColor="@color/white"
-                android:textSize="48sp"
-                android:textStyle="bold" />
-
-            <!-- Year & Seasons Count -->
+            <!-- Hero Section -->
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/yearText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="2016"
-                    android:textColor="@color/white"
-                    android:textSize="20sp" />
-
-                <TextView
-                    android:id="@+id/seasonsCountText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="24dp"
-                    android:text="5 seasons"
-                    android:textColor="@color/white"
-                    android:textSize="20sp" />
-
-            </LinearLayout>
-
-            <!-- Genres -->
-            <TextView
-                android:id="@+id/genresText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Sci-Fi &amp; Fantasy, Mystery, Action &amp; Adventure"
-                android:textColor="@color/gray_light"
-                android:textSize="16sp" />
-
-            <!-- Description -->
-            <TextView
-                android:id="@+id/descriptionText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:maxLines="4"
-                android:text="When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces, and one strange little girl."
-                android:textColor="@color/gray_light"
-                android:textSize="16sp" />
-
-            <!-- Seasons List -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/seasonsRecyclerView"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_marginTop="32dp"
-                android:layout_weight="1"
-                android:clipToPadding="false" />
-
-        </LinearLayout>
-
-        <!-- Right Side - Episodes -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_marginStart="48dp"
-            android:layout_weight="0.6"
-            android:orientation="vertical">
-
-            <!-- Selected Episode Preview -->
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
+                <!-- Poster -->
                 <ImageView
-                    android:id="@+id/selectedEpisodeThumbnail"
-                    android:layout_width="match_parent"
-                    android:layout_height="100dp"
+                    android:id="@+id/posterImage"
+                    android:layout_width="200dp"
+                    android:layout_height="300dp"
                     android:scaleType="centerCrop"
                     android:background="#333" />
 
-                <ImageView
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:layout_centerInParent="true"
-                    android:src="@drawable/ic_play_circle"
-                    app:tint="@color/white" />
-
-            </RelativeLayout>
-
-            <!-- Selected Episode Info -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/selectedEpisodeTitle"
-                    android:layout_width="wrap_content"
+                <!-- Info Section -->
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Chapter One: The Vanishing of Will Byers - S1,E1"
-                    android:textColor="@color/white"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
+                    android:layout_weight="1"
+                    android:layout_marginStart="32dp"
+                    android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/selectedEpisodeDate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="July 15, 2016"
-                    android:textColor="@color/gray_light"
-                    android:textSize="14sp" />
+                    <!-- Title -->
+                    <TextView
+                        android:id="@+id/titleText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Stranger Things"
+                        android:textColor="@color/white"
+                        android:textSize="52sp"
+                        android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/selectedEpisodeDescription"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:maxLines="3"
-                    android:text="On his way home from a friend's house, young Will sees something terrifying..."
-                    android:textColor="@color/gray_light"
-                    android:textSize="14sp" />
+                    <!-- Meta Info Row -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/yearText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2025"
+                            android:textColor="@color/white"
+                            android:textSize="18sp" />
+
+                        <View
+                            android:layout_width="4dp"
+                            android:layout_height="4dp"
+                            android:layout_marginStart="12dp"
+                            android:layout_marginEnd="12dp"
+                            android:background="@color/white" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="TV-PG"
+                            android:textColor="@color/white"
+                            android:textSize="18sp" />
+
+                        <View
+                            android:layout_width="4dp"
+                            android:layout_height="4dp"
+                            android:layout_marginStart="12dp"
+                            android:layout_marginEnd="12dp"
+                            android:background="@color/white" />
+
+                        <TextView
+                            android:id="@+id/durationText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="43h13m"
+                            android:textColor="@color/white"
+                            android:textSize="18sp" />
+
+                    </LinearLayout>
+
+                    <!-- Genres -->
+                    <LinearLayout
+                        android:id="@+id/genresLayout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:orientation="horizontal" />
+
+                    <!-- Description -->
+                    <TextView
+                        android:id="@+id/descriptionText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:maxLines="3"
+                        android:text="When a young boy vanishes, a small town uncovers a mystery..."
+                        android:textColor="@color/gray_light"
+                        android:textSize="16sp"
+                        android:lineSpacingExtra="4dp" />
+
+                    <!-- Creators and Stars -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Creators"
+                                android:textColor="@color/gray_light"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:id="@+id/creatorsText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Lampton Enochs, Rand Ge..."
+                                android:textColor="@color/white"
+                                android:textSize="16sp" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="32dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Stars"
+                                android:textColor="@color/gray_light"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:id="@+id/starsText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Millie Bobby Brown, Finn..."
+                                android:textColor="@color/white"
+                                android:textSize="16sp" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <!-- Buttons Row -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="32dp"
+                        android:visibility="gone"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/watchButton"
+                            android:layout_width="200dp"
+                            android:layout_height="56dp"
+                            android:background="@drawable/ic_play"
+                            android:text="▶ Watch"
+                            android:textColor="@android:color/black"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:focusable="true" />
+
+                        <ImageView
+                            android:id="@+id/favoriteButton"
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
+                            android:layout_marginStart="16dp"
+                            android:src="@drawable/ic_favorite"
+                            android:background="@drawable/button_icon"
+                            android:padding="12dp"
+                            android:focusable="true"
+                            app:tint="@color/white" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
 
             </LinearLayout>
 
-            <!-- Season Title -->
-            <TextView
-                android:id="@+id/selectedSeasonTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="15dp"
-                android:text="Season 1"
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <!-- Episodes List -->
+            <!-- Season Tabs -->
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/episodesRecyclerView"
+                android:id="@+id/seasonTabsRecyclerView"
                 android:layout_width="match_parent"
-                android:layout_height="500dp"
-                android:layout_marginTop="16dp"
-                android:nestedScrollingEnabled="true"
-                android:scrollbars="vertical"
-                android:fadeScrollbars="false" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:clipToPadding="false"
+                android:overScrollMode="never" />
+
+            <!-- Episodes Grid -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/episodesGridRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never" />
 
         </LinearLayout>
 
-    </LinearLayout>
-
-    <!-- Play Button (FAB-style) -->
-    <Button
-        android:id="@+id/playButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="32dp"
-        android:background="@drawable/button_play_fab"
-        android:paddingStart="32dp"
-        android:paddingTop="16dp"
-        android:paddingEnd="32dp"
-        android:paddingBottom="16dp"
-        android:text="▶ Play Now"
-        android:textColor="@android:color/black"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+    </ScrollView>
 
     <!-- Loading Progress -->
     <ProgressBar
@@ -230,6 +267,15 @@
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Rating Badge (if needed) -->
+    <TextView
+        android:id="@+id/ratingText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

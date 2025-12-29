@@ -37,6 +37,7 @@ import androidx.media3.ui.PlayerView;
 
 import com.cinestream.tvplayer.R;
 import com.cinestream.tvplayer.data.model.MediaItems;
+import com.cinestream.tvplayer.data.repository.MediaRepository;
 import com.cinestream.tvplayer.ui.player.dialog.QualitySelectionDialog;
 import com.cinestream.tvplayer.ui.player.dialog.ServerSelectionDialog;
 import com.cinestream.tvplayer.ui.player.dialog.SubtitleSelectionDialog;
@@ -70,6 +71,8 @@ public class PlayerActivity extends AppCompatActivity {
     private AppCompatButton qualityButton;
     private AppCompatButton subtitleButton;
     private AppCompatButton speedButton;
+
+    private MediaRepository mediaRepository;
 
     // Dialogs
     private QualitySelectionDialog qualityDialog;
@@ -111,6 +114,8 @@ public class PlayerActivity extends AppCompatActivity {
             return;
         }
 
+        Log.i("PlayerActivity", "onCreate: "+sourceMediaItem.getSubtitles());
+        //Log.i("PlayerActivity", "onCreate: "+sourceMediaItem.getVideoSources().get(0).toString());
         // Restore saved state if available
         if (savedInstanceState != null) {
             savedPlaybackPosition = savedInstanceState.getLong("playback_position", 0);
@@ -118,6 +123,9 @@ public class PlayerActivity extends AppCompatActivity {
             currentQuality = savedInstanceState.getString("current_quality", "Auto");
             currentSpeed = savedInstanceState.getFloat("current_speed", 1.0f);
         }
+
+        mediaRepository = new MediaRepository();
+
 
         initializeViews();
         setupPlayer();
@@ -327,7 +335,7 @@ public class PlayerActivity extends AppCompatActivity {
 
         MediaItem.Builder mediaItemBuilder = new MediaItem.Builder();
 
-        if (!sourceMediaItem.getId().isEmpty()) {
+        if (sourceMediaItem.getId()!=null) {
             // Create MediaItem with subtitle configuration
             mediaItemBuilder.setUri(getMediaUri(sourceMediaItem))
                     .setMediaId(sourceMediaItem.getId());
@@ -429,11 +437,145 @@ public class PlayerActivity extends AppCompatActivity {
 
     private void showServersDialog() {
         if (sourceMediaItem != null) {
-            serverDialog.setVideoSources(sourceMediaItem.getVideoSources());
-            serverDialog.setOnServerSelectedListener(serverItem -> {
-                switchToServer(serverItem.getUrl(), serverItem.getQuality());
-            });
+            // Make sure dialog is created fresh
+            serverDialog = new ServerSelectionDialog();
+
+            // Set the media item so dialog knows if it's movie or TV
+            serverDialog.setMediaItem(sourceMediaItem);
+
+            // Show the dialog
             serverDialog.show(getSupportFragmentManager(), "server_dialog");
+
+            serverDialog.ViewClickListener(v -> {
+                Log.i("PlayerActivity", "View clicked");
+            });
+
+
+            // Set the listener
+            serverDialog.setOnServerSelectedListener(serverItem -> {
+                Log.i("PlayerActivity", "Server selected: " + serverItem.getName());
+                switchToServerSource(serverItem);
+                serverDialog.dismiss();
+            });
+
+
+        } else {
+            serverDialog.dismiss();
+            Toast.makeText(this, "Media information not available", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void switchToServerSource(ServerSelectionDialog.ServerItem serverItem) {
+        if (player == null || sourceMediaItem == null) {
+            Toast.makeText(this, "Player not ready", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Show loading indicator
+        loadingProgressBar.setVisibility(View.VISIBLE);
+
+        // Save current position
+        long currentPosition = player.getCurrentPosition();
+        boolean wasPlaying = player.isPlaying();
+
+        String title = sourceMediaItem.getTitle();
+        String year = String.valueOf(sourceMediaItem.getYear());
+        String tmdbId = sourceMediaItem.getTmdbId();
+        String mediaType = sourceMediaItem.getMediaType();
+        String season = sourceMediaItem.getSeason();
+        String episode = sourceMediaItem.getEpisode();
+
+        android.util.Log.i("PlayerActivity", "Fetching streams from: " + serverItem.getUrl());
+        android.util.Log.i("PlayerActivity", "Title: " + title + ", Year: " + year + ", Type: " + mediaType);
+
+        // Fetch streams from the selected server
+        mediaRepository.fetchStreamsFromServer(
+                serverItem.getUrl(),
+                title,
+                year,
+                tmdbId,
+                mediaType,
+                season,
+                episode,
+                new MediaRepository.VideasyCallback() {
+                    @Override
+                    public void onSuccess(MediaItems updatedMediaItem) {
+                        List<MediaItems.VideoSource> videoSources = updatedMediaItem.getVideoSources();
+                        List<MediaItems.SubtitleItem> subtitles = updatedMediaItem.getSubtitles();
+
+                        if (videoSources != null && !videoSources.isEmpty()) {
+                            // Update the source media item with new sources
+                            sourceMediaItem.setVideoSources(videoSources);
+                            if (subtitles != null) {
+                                sourceMediaItem.setSubtitles(subtitles);
+                            }
+
+                            // Get the best quality URL
+                            String newUrl = videoSources.get(0).getUrl();
+                            String quality = videoSources.get(0).getQuality();
+
+                            android.util.Log.i("PlayerActivity", "Got " + videoSources.size() + " sources");
+
+                            // Switch to the new source
+                            switchToNewSource(newUrl, quality, currentPosition, wasPlaying);
+
+                            Toast.makeText(PlayerActivity.this,
+                                    "Switched to " + serverItem.getName(),
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            loadingProgressBar.setVisibility(View.GONE);
+                            Toast.makeText(PlayerActivity.this,
+                                    "No sources available from this server",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        loadingProgressBar.setVisibility(View.GONE);
+                        Toast.makeText(PlayerActivity.this,
+                                "Failed to load from server: " + error,
+                                Toast.LENGTH_SHORT).show();
+                        android.util.Log.e("PlayerActivity", "Server fetch error: " + error);
+                    }
+                }
+        );
+    }
+    private void switchToNewSource(String newUrl, String quality, long position, boolean wasPlaying) {
+        if (newUrl == null || newUrl.isEmpty()) {
+            loadingProgressBar.setVisibility(View.GONE);
+            Toast.makeText(this, "Invalid source URL", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            android.util.Log.d("PlayerActivity", "Switching to URL: " + newUrl);
+
+            // Create new media source
+            MediaSource newMediaSource = createMediaSourceFromUrl(newUrl);
+
+            if (newMediaSource == null) {
+                loadingProgressBar.setVisibility(View.GONE);
+                Toast.makeText(this, "Unsupported media format", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Switch source
+            player.setMediaSource(newMediaSource);
+            player.prepare();
+            player.seekTo(position);
+            player.setPlayWhenReady(wasPlaying);
+
+            // Update quality button
+            currentQuality = quality;
+            updateQualityButton();
+
+            // Hide loading indicator will be handled by player state listener
+
+        } catch (Exception e) {
+            android.util.Log.e("PlayerActivity", "Error switching source", e);
+            loadingProgressBar.setVisibility(View.GONE);
+            Toast.makeText(this, "Failed to switch source: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -670,6 +812,7 @@ public class PlayerActivity extends AppCompatActivity {
         }
     }
 
+    // Update onDestroy to clean up the repository
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -680,6 +823,10 @@ public class PlayerActivity extends AppCompatActivity {
         if (player != null) {
             player.release();
             player = null;
+        }
+        if (mediaRepository != null) {
+            mediaRepository.cleanup();
+            mediaRepository = null;
         }
     }
 
