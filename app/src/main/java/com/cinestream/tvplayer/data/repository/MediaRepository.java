@@ -108,7 +108,7 @@ public class MediaRepository {
     public void getFeaturedMoviesAsync(TMDBCallback callback) {
         executorService.execute(() -> {
             try {
-                String urlString = TMDB_BASE_URL + "/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc";
+                String urlString = TMDB_BASE_URL + "/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&region=US&sort_by=popularity.desc";
                 List<MediaItems> movies = fetchMoviesFromTMDB(urlString);
                 mainHandler.post(() -> callback.onSuccess(movies));
             } catch (Exception e) {
@@ -124,7 +124,7 @@ public class MediaRepository {
     public void getTopRatedMoviesAsync(TMDBCallback callback) {
         executorService.execute(() -> {
             try {
-                String urlString = TMDB_BASE_URL + "/movie/top_rated?language=en-US&page=1";
+                String urlString = TMDB_BASE_URL + "/movie/top_rated?language=en-US&page=1&region=US";
                 List<MediaItems> movies = fetchMoviesFromTMDB(urlString);
                 mainHandler.post(() -> callback.onSuccess(movies));
             } catch (Exception e) {
