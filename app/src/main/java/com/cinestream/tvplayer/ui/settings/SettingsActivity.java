@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.Button;
@@ -15,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.widget.NestedScrollView;
 
 import com.cinestream.tvplayer.R;
 import com.cinestream.tvplayer.data.repository.PreferencesManager;
@@ -43,22 +46,31 @@ public class SettingsActivity extends AppCompatActivity {
     private LinearLayout voiceSearchContainer;
     private LinearLayout bufferSizeContainer;
     private LinearLayout cacheContainer;
+    private NestedScrollView scrollView;
+    private View scrollOverlay;
 
     // Data
     private PreferencesManager preferencesManager;
     private TMDBRepository tmdbRepository;
 
+    // Scroll overlay control
+    private Handler overlayHandler;
+    private Runnable hideOverlayRunnable;
+    private static final long OVERLAY_HIDE_DELAY = 1000; // 1 second
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
-        
+
         preferencesManager = PreferencesManager.getInstance(this);
         tmdbRepository = TMDBRepository.getInstance();
-        
+        overlayHandler = new Handler(Looper.getMainLooper());
+
         setupToolbar();
         initializeViews();
         setupListeners();
+        setupScrollListener();
         loadCurrentSettings();
         updateCacheSize();
     }
@@ -73,26 +85,30 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void initializeViews() {
+        // ScrollView and overlay
+        scrollView = findViewById(R.id.scrollView);
+        scrollOverlay = findViewById(R.id.scrollOverlay);
+
         // Value displays
         videoQualityValue = findViewById(R.id.videoQualityValue);
         subtitleLanguageValue = findViewById(R.id.subtitleLanguageValue);
         cacheSizeValue = findViewById(R.id.cacheSizeValue);
         bufferSizeValue = findViewById(R.id.bufferSizeValue);
         appVersionValue = findViewById(R.id.appVersionValue);
-        
+
         // Switches
         darkThemeSwitch = findViewById(R.id.darkThemeSwitch);
         autoQualitySwitch = findViewById(R.id.autoQualitySwitch);
         voiceSearchSwitch = findViewById(R.id.voiceSearchSwitch);
-        
+
         // SeekBar
         bufferSizeSeekBar = findViewById(R.id.bufferSizeSeekBar);
-        
+
         // Buttons
         clearCacheButton = findViewById(R.id.clearCacheButton);
         resetDefaultsButton = findViewById(R.id.resetDefaultsButton);
         aboutButton = findViewById(R.id.aboutButton);
-        
+
         // Containers for navigation
         videoQualityContainer = findViewById(R.id.videoQualityContainer);
         subtitleContainer = findViewById(R.id.subtitleContainer);
@@ -102,27 +118,55 @@ public class SettingsActivity extends AppCompatActivity {
         cacheContainer = findViewById(R.id.cacheContainer);
     }
 
+    private void setupScrollListener() {
+        hideOverlayRunnable = () -> {
+            scrollOverlay.animate()
+                    .alpha(0f)
+                    .setDuration(300)
+                    .withEndAction(() -> scrollOverlay.setVisibility(View.GONE))
+                    .start();
+        };
+
+        scrollView.setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener) (v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+            // Show overlay when scrolling
+            if (scrollOverlay.getVisibility() != View.VISIBLE) {
+                scrollOverlay.setVisibility(View.VISIBLE);
+                scrollOverlay.setAlpha(0f);
+                scrollOverlay.animate()
+                        .alpha(1f)
+                        .setDuration(200)
+                        .start();
+            }
+
+            // Cancel any pending hide operations
+            overlayHandler.removeCallbacks(hideOverlayRunnable);
+
+            // Schedule overlay to hide after delay
+            overlayHandler.postDelayed(hideOverlayRunnable, OVERLAY_HIDE_DELAY);
+        });
+    }
+
     private void setupListeners() {
         // Container clicks for navigation
         videoQualityContainer.setOnClickListener(v -> showVideoQualityDialog());
         subtitleContainer.setOnClickListener(v -> showSubtitleLanguageDialog());
-        
+
         // Switches
         darkThemeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             preferencesManager.setDarkThemeEnabled(isChecked);
             Toast.makeText(this, "Theme " + (isChecked ? "dark" : "light") + " mode enabled", Toast.LENGTH_SHORT).show();
         });
-        
+
         autoQualitySwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             preferencesManager.setAutoQualityEnabled(isChecked);
             Toast.makeText(this, "Auto quality " + (isChecked ? "enabled" : "disabled"), Toast.LENGTH_SHORT).show();
         });
-        
+
         voiceSearchSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             preferencesManager.setVoiceSearchEnabled(isChecked);
             Toast.makeText(this, "Voice search " + (isChecked ? "enabled" : "disabled"), Toast.LENGTH_SHORT).show();
         });
-        
+
         // SeekBar
         bufferSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -131,17 +175,17 @@ public class SettingsActivity extends AppCompatActivity {
                     bufferSizeValue.setText(progress + " MB");
                 }
             }
-            
+
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {}
-            
+
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 preferencesManager.setPlaybackBufferSize(seekBar.getProgress());
                 Toast.makeText(SettingsActivity.this, "Buffer size set to " + seekBar.getProgress() + "MB", Toast.LENGTH_SHORT).show();
             }
         });
-        
+
         // Buttons
         clearCacheButton.setOnClickListener(v -> showClearCacheDialog());
         resetDefaultsButton.setOnClickListener(v -> showResetDefaultsDialog());
@@ -155,11 +199,11 @@ public class SettingsActivity extends AppCompatActivity {
         darkThemeSwitch.setChecked(preferencesManager.isDarkThemeEnabled());
         autoQualitySwitch.setChecked(preferencesManager.isAutoQualityEnabled());
         voiceSearchSwitch.setChecked(preferencesManager.isVoiceSearchEnabled());
-        
+
         int bufferSize = preferencesManager.getPlaybackBufferSize();
         bufferSizeSeekBar.setProgress(bufferSize);
         bufferSizeValue.setText(bufferSize + " MB");
-        
+
         // Load app version
         try {
             PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
@@ -175,7 +219,7 @@ public class SettingsActivity extends AppCompatActivity {
             public void onSuccess(String stats) {
                 cacheSizeValue.setText(stats);
             }
-            
+
             @Override
             public void onError(String error) {
                 cacheSizeValue.setText("Error loading cache info");
@@ -186,11 +230,10 @@ public class SettingsActivity extends AppCompatActivity {
     private void showVideoQualityDialog() {
         String[] qualities = {"Auto", "1080p", "720p", "480p", "360p"};
         String currentQuality = preferencesManager.getVideoQuality();
-        
-        // Simple dialog using androidx.appcompat.app.AlertDialog
+
         androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
         builder.setTitle("Select Video Quality");
-        
+
         int selectedIndex = 0;
         for (int i = 0; i < qualities.length; i++) {
             if (qualities[i].equals(currentQuality)) {
@@ -198,7 +241,7 @@ public class SettingsActivity extends AppCompatActivity {
                 break;
             }
         }
-        
+
         builder.setSingleChoiceItems(qualities, selectedIndex, (dialog, which) -> {
             String selectedQuality = qualities[which];
             preferencesManager.setVideoQuality(selectedQuality);
@@ -206,7 +249,7 @@ public class SettingsActivity extends AppCompatActivity {
             Toast.makeText(SettingsActivity.this, "Video quality set to " + selectedQuality, Toast.LENGTH_SHORT).show();
             dialog.dismiss();
         });
-        
+
         builder.setNegativeButton("Cancel", null);
         builder.show();
     }
@@ -215,10 +258,10 @@ public class SettingsActivity extends AppCompatActivity {
         String[] languages = {"English", "Spanish", "French", "German", "Italian", "Portuguese", "Japanese", "Korean", "Chinese"};
         String[] languageCodes = {"en", "es", "fr", "de", "it", "pt", "ja", "ko", "zh"};
         String currentCode = preferencesManager.getSubtitleLanguage();
-        
+
         androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
         builder.setTitle("Select Subtitle Language");
-        
+
         int selectedIndex = 0;
         for (int i = 0; i < languageCodes.length; i++) {
             if (languageCodes[i].equals(currentCode)) {
@@ -226,7 +269,7 @@ public class SettingsActivity extends AppCompatActivity {
                 break;
             }
         }
-        
+
         builder.setSingleChoiceItems(languages, selectedIndex, (dialog, which) -> {
             String selectedCode = languageCodes[which];
             preferencesManager.setSubtitleLanguage(selectedCode);
@@ -234,7 +277,7 @@ public class SettingsActivity extends AppCompatActivity {
             Toast.makeText(SettingsActivity.this, "Subtitle language set to " + languages[which], Toast.LENGTH_SHORT).show();
             dialog.dismiss();
         });
-        
+
         builder.setNegativeButton("Cancel", null);
         builder.show();
     }
@@ -268,7 +311,7 @@ public class SettingsActivity extends AppCompatActivity {
     private void showAboutDialog() {
         androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
         builder.setTitle("About CineStream TV");
-        
+
         String aboutText = "CineStream TV Player\n" +
                 "Version: " + appVersionValue.getText().toString() + "\n\n" +
                 "A Netflix-style Android TV video player with TMDB integration.\n\n" +
@@ -284,13 +327,13 @@ public class SettingsActivity extends AppCompatActivity {
                 "• TMDB API\n" +
                 "• Android TV Leanback Library\n\n" +
                 "© 2024 CineStream TV";
-        
+
         TextView textView = new TextView(this);
         textView.setText(aboutText);
         textView.setPadding(48, 48, 48, 48);
         textView.setTextColor(getResources().getColor(android.R.color.white));
         textView.setMovementMethod(new ScrollingMovementMethod());
-        
+
         builder.setView(textView);
         builder.setPositiveButton("Close", null);
         builder.show();
@@ -308,6 +351,15 @@ public class SettingsActivity extends AppCompatActivity {
             case "ko": return "Korean";
             case "zh": return "Chinese";
             default: return languageCode.toUpperCase();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Clean up handler callbacks
+        if (overlayHandler != null && hideOverlayRunnable != null) {
+            overlayHandler.removeCallbacks(hideOverlayRunnable);
         }
     }
 

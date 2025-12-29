@@ -25,6 +25,7 @@ import com.cinestream.tvplayer.api.TMDBApiClient;
 import com.cinestream.tvplayer.data.model.CategorySection;
 import com.cinestream.tvplayer.data.model.MediaItems;
 import com.cinestream.tvplayer.data.repository.MediaRepository;
+import com.cinestream.tvplayer.data.repository.MediaRepositoryTV;
 import com.cinestream.tvplayer.data.repository.MediaRepositoryVideasy;
 import com.cinestream.tvplayer.ui.adapter.CategoryAdapter;
 import com.cinestream.tvplayer.ui.adapter.VerticalSpaceItemDecoration;
@@ -69,6 +70,8 @@ public class NetflixMainActivity extends AppCompatActivity {
     private List<CategorySection> categories = new ArrayList<>();
     private CategoryAdapter categoryAdapter;
     private MediaRepository mediaRepository;
+
+    private MediaRepositoryTV mediaRepositorytv;
     private MediaRepositoryVideasy apiRepository;
     private MediaItems currentSelectedItem;
 
@@ -83,6 +86,7 @@ public class NetflixMainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main_netflix);
 
         mediaRepository = new MediaRepository();
+        mediaRepositorytv = MediaRepositoryTV.getInstance();
         apiRepository = MediaRepositoryVideasy.getInstance();
 
         initializeViews();
@@ -177,11 +181,13 @@ public class NetflixMainActivity extends AppCompatActivity {
         });
 
         moviesIcon.setOnClickListener(v -> {
+            loadContent();
             Toast.makeText(this, "Movies - Coming Soon", Toast.LENGTH_SHORT).show();
         });
 
         tvIcon.setOnClickListener(v -> {
-            Toast.makeText(this, "TV Shows - Coming Soon", Toast.LENGTH_SHORT).show();
+            loadTvShows();
+            //Toast.makeText(this, "TV Shows - Coming Soon", Toast.LENGTH_SHORT).show();
         });
 
         apiIcon.setOnClickListener(v -> {
@@ -196,6 +202,144 @@ public class NetflixMainActivity extends AppCompatActivity {
             Intent intent = new Intent(NetflixMainActivity.this, SettingsActivity.class);
             startActivity(intent);
         });
+    }
+
+    private void loadTvShows() {
+        if (isLoadingContent) {
+            Log.d(TAG, "Already loading content, skipping duplicate request");
+            return;
+        }
+
+        categoryAdapter= null;
+        isLoadingContent = true;
+        loadedCategories = 0;
+        loadingOverlay.setVisibility(View.VISIBLE);
+
+        categories.clear();
+
+        // Add API content category
+        //categories.add(new CategorySection("🎆 Live API Content", apiRepository.getAPISampleContent()));
+
+        mediaRepositorytv.getPopularTVShowsAsync(new MediaRepositoryTV.TVShowCallback() {
+            @Override
+            public void onSuccess(List<MediaItems> tvShows) {
+                // Handle successful load
+                Log.d(TAG, "Successfully loaded " + tvShows.size() + " featured Tv series");
+                if (!tvShows.isEmpty()) {
+                    CategorySection featuredSection = new CategorySection("Featured Tv Series", tvShows);
+                    categories.add(0, featuredSection);
+                    categoryAdapter.notifyDataSetChanged();
+                    currentSelectedItem = tvShows.get(0);
+                    updateHeroContent(currentSelectedItem, 0);
+
+                    // Update hero content with first featured tv show if it's the first category loaded
+                    if (currentSelectedItem == null) {
+                        currentSelectedItem = tvShows.get(0);
+                        updateHeroContent(currentSelectedItem, 0);
+                    }
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                // Handle error
+                Log.e(TAG, "Failed to load featured movies: " + error);
+            }
+        });
+
+        mediaRepositorytv.getTopRatedTVShowsAsync(new MediaRepositoryTV.TVShowCallback() {
+            @Override
+            public void onSuccess(List<MediaItems> tvShows) {
+                // Handle successful load
+                Log.d(TAG, "Successfully loaded " + tvShows.size() + " top rated Tv series");
+                if (!tvShows.isEmpty()) {
+                    CategorySection featuredSection = new CategorySection("Top Rated Tv Series", tvShows);
+                    categories.add(0, featuredSection);
+                    categoryAdapter.notifyDataSetChanged();
+                    currentSelectedItem = tvShows.get(0);
+                    updateHeroContent(currentSelectedItem, 0);
+
+                    // Update hero content with first featured tv show if it's the first category loaded
+                    if (currentSelectedItem == null) {
+                        currentSelectedItem = tvShows.get(0);
+                        updateHeroContent(currentSelectedItem, 0);
+                    }
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                // Handle error
+                Log.e(TAG, "Failed to load featured movies: " + error);
+            }
+        });
+
+        mediaRepositorytv.getTrendingTVShowsAsync(new MediaRepositoryTV.TVShowCallback() {
+            @Override
+            public void onSuccess(List<MediaItems> tvShows) {
+                // Handle successful load
+                Log.d(TAG, "Successfully loaded " + tvShows.size() + " Trending Tv series");
+                if (!tvShows.isEmpty()) {
+                    CategorySection featuredSection = new CategorySection("Trending Tv Series", tvShows);
+                    categories.add(0, featuredSection);
+                    categoryAdapter.notifyDataSetChanged();
+                    currentSelectedItem = tvShows.get(0);
+                    updateHeroContent(currentSelectedItem, 0);
+
+                    // Update hero content with first featured tv show if it's the first category loaded
+                    if (currentSelectedItem == null) {
+                        currentSelectedItem = tvShows.get(0);
+                        updateHeroContent(currentSelectedItem, 0);
+                    }
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                // Handle error
+                Log.e(TAG, "Failed to load featured movies: " + error);
+            }
+        });
+
+        mediaRepositorytv.getActionAdventureTVShowsAsync(new MediaRepositoryTV.TVShowCallback() {
+            @Override
+            public void onSuccess(List<MediaItems> tvShows) {
+                // Handle successful load
+                Log.d(TAG, "Successfully loaded " + tvShows.size() + " action Tv series");
+                if (!tvShows.isEmpty()) {
+                    CategorySection featuredSection = new CategorySection("Action & Adventure Tv Series", tvShows);
+                    categories.add(0, featuredSection);
+                    categoryAdapter.notifyDataSetChanged();
+                    currentSelectedItem = tvShows.get(0);
+                    updateHeroContent(currentSelectedItem, 0);
+
+                    // Update hero content with first featured tv show if it's the first category loaded
+                    if (currentSelectedItem == null) {
+                        currentSelectedItem = tvShows.get(0);
+                        updateHeroContent(currentSelectedItem, 0);
+                    }
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                // Handle error
+                Log.e(TAG, "Failed to load featured movies: " + error);
+            }
+        });
+
+
+        // Setup adapter with initial empty structure
+        if (categoryAdapter == null) {
+            categoryAdapter = new CategoryAdapter(categories);
+            categoriesRecyclerView.setAdapter(categoryAdapter);
+            setupCategoryListeners();
+        } else {
+            categoryAdapter.notifyDataSetChanged();
+        }
+
+        isLoadingContent = false;
+        loadingOverlay.setVisibility(View.GONE);
     }
 
     @Override
@@ -235,7 +379,7 @@ public class NetflixMainActivity extends AppCompatActivity {
         categories.clear();
 
         // Add API content category
-        categories.add(new CategorySection("🎆 Live API Content", apiRepository.getAPISampleContent()));
+        //categories.add(new CategorySection("🎆 Live API Content", apiRepository.getAPISampleContent()));
 
         // Setup adapter with initial empty structure
         if (categoryAdapter == null) {
@@ -494,9 +638,7 @@ public class NetflixMainActivity extends AppCompatActivity {
         if (apiRepository != null) {
             apiRepository.cleanup();
         }
-        if (combinedRepository != null) {
-            combinedRepository.cleanup();
-        }
+
         if (mediaRepository != null) {
             mediaRepository.cleanup();
         }
