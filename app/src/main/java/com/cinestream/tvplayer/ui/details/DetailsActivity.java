@@ -226,42 +226,7 @@ public class DetailsActivity extends AppCompatActivity {
         playButton.setEnabled(false);
 
         // Fetch video sources from API
-        MediaRepositoryVideasy.getInstance().fetchVideoSources(
-                mediaItems.getTitle(),
-                mediaItems.getMediaType(),
-                String.valueOf(mediaItems.getYear()),
-                mediaItems.getTmdbId(),
-                mediaItems.getSeason(),
-                mediaItems.getEpisode(),
-                new MediaRepositoryVideasy.ApiCallback<MediaItems>() {
-                    @Override
-                    public void onSuccess(MediaItems result) {
-                        // Hide loading overlay
-                        loadingOverlay.setVisibility(View.GONE);
-                        playButton.setEnabled(true);
 
-                        // Update the media item with actual video sources
-                        mediaItems = result;
-
-                        Log.d(TAG, "video sources fetched: "+result);
-
-                        // Launch player
-                        launchPlayer();
-                    }
-
-                    @Override
-                    public void onError(String error) {
-                        // Hide loading overlay
-                        loadingOverlay.setVisibility(View.GONE);
-                        playButton.setEnabled(true);
-
-                        // Show error
-                        Toast.makeText(DetailsActivity.this,
-                                "Failed to load video sources: " + error,
-                                Toast.LENGTH_LONG).show();
-                    }
-                }
-        );
     }
 
     private void launchPlayer() {
