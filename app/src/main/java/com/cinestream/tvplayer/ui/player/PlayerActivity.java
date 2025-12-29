@@ -60,7 +60,7 @@ public class PlayerActivity extends AppCompatActivity {
     private ImageView subtitleButton;
     private TextView currentTimeTextView;
     private TextView totalTimeTextView;
-    private ProgressBar seekBar; // Changed from ProgressBar to SeekBar
+    private SeekBar seekBar; // Changed from ProgressBar to SeekBar
     private ProgressBar loadingProgressBar;
 
     // Managers and Dialogs
