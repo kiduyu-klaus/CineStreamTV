@@ -5,7 +5,9 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.cinestream.tvplayer.api.TMDBApiClient;
+import com.cinestream.tvplayer.data.model.Episode;
 import com.cinestream.tvplayer.data.model.MediaItems;
+import com.cinestream.tvplayer.data.model.Season;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -552,7 +554,7 @@ public class MediaRepository {
             try {
                 String encodedTitle = URLEncoder.encode(title, "UTF-8");
                 String videasyUrl = String.format(
-                        "%s/myflixerzupcloud/sources-with-title?title=%s&mediaType=tv&year=%s&tmdbId=%s&seasonId=%s&episodeId=%s",
+                        "%s/1movies/sources-with-title?title=%s&mediaType=tv&year=%s&tmdbId=%s&seasonId=%s&episodeId=%s",
                         VIDEASY_API_BASE, encodedTitle, year, tmdbId, season, episode
                 );
 
@@ -634,6 +636,195 @@ public class MediaRepository {
 
             } catch (Exception e) {
                 Log.e(TAG, "Error fetching Videasy TV streams", e);
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    // Add these methods to your existing MediaRepository.java class
+
+    // Add these callback interfaces at the top of the class:
+    public interface TVShowDetailsCallback {
+        void onSuccess(MediaItems detailedShow, List<Season> seasons);
+        void onError(String error);
+    }
+
+    public interface EpisodesCallback {
+        void onSuccess(List<Episode> episodes);
+        void onError(String error);
+    }
+
+    /**
+     * Get detailed TV show information including all seasons
+     */
+    public void getTVShowDetails(String tmdbId, TVShowDetailsCallback callback) {
+        executorService.execute(() -> {
+            try {
+                String url = TMDB_BASE_URL + "/tv/" + tmdbId + "?language=en-US";
+
+                Connection.Response response = Jsoup.connect(url)
+                        .header("accept", "application/json")
+                        .header("Authorization", "Bearer " + BEARER_TOKEN)
+                        .ignoreContentType(true)
+                        .timeout(TIMEOUT_MS)
+                        .method(Connection.Method.GET)
+                        .execute();
+
+                if (response.statusCode() == 200) {
+                    JSONObject jsonResponse = new JSONObject(response.body());
+
+                    // Create detailed MediaItems
+                    MediaItems tvShow = createDetailedMediaItemFromTMDB(jsonResponse, TMDBApiClient.ContentType.TV);
+
+                    // Parse seasons
+                    List<Season> seasons = new ArrayList<>();
+                    JSONArray seasonsArray = jsonResponse.optJSONArray("seasons");
+
+                    if (seasonsArray != null) {
+                        for (int i = 0; i < seasonsArray.length(); i++) {
+                            JSONObject seasonJson = seasonsArray.getJSONObject(i);
+
+                            // Skip "Season 0" (specials)
+                            int seasonNumber = seasonJson.optInt("season_number", 0);
+                            if (seasonNumber == 0) continue;
+
+                            Season season = new Season();
+                            season.setId(seasonJson.optInt("id", 0));
+                            season.setName(seasonJson.optString("name", "Season " + seasonNumber));
+                            season.setOverview(seasonJson.optString("overview", ""));
+                            season.setSeasonNumber(seasonNumber);
+                            season.setEpisodeCount(seasonJson.optInt("episode_count", 0));
+                            season.setAirDate(seasonJson.optString("air_date", ""));
+
+                            String posterPath = seasonJson.optString("poster_path", "");
+                            if (!posterPath.isEmpty()) {
+                                season.setPosterPath(IMAGE_BASE_URL + POSTER_SIZE + posterPath);
+                            }
+
+                            seasons.add(season);
+                        }
+                    }
+
+                    MediaItems finalTvShow = tvShow;
+                    mainHandler.post(() -> callback.onSuccess(finalTvShow, seasons));
+
+                } else {
+                    throw new IOException("Failed with status: " + response.statusCode());
+                }
+
+            } catch (Exception e) {
+                Log.e(TAG, "Error fetching TV show details", e);
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    /**
+     * Get episodes for a specific season
+     */
+    public void getSeasonEpisodes(String tmdbId, int seasonNumber, EpisodesCallback callback) {
+        executorService.execute(() -> {
+            try {
+                String url = TMDB_BASE_URL + "/tv/" + tmdbId + "/season/" + seasonNumber + "?language=en-US";
+
+                Connection.Response response = Jsoup.connect(url)
+                        .header("accept", "application/json")
+                        .header("Authorization", "Bearer " + BEARER_TOKEN)
+                        .ignoreContentType(true)
+                        .timeout(TIMEOUT_MS)
+                        .method(Connection.Method.GET)
+                        .execute();
+
+                if (response.statusCode() == 200) {
+                    JSONObject jsonResponse = new JSONObject(response.body());
+
+                    List<Episode> episodes = new ArrayList<>();
+                    JSONArray episodesArray = jsonResponse.optJSONArray("episodes");
+
+                    if (episodesArray != null) {
+                        for (int i = 0; i < episodesArray.length(); i++) {
+                            JSONObject episodeJson = episodesArray.getJSONObject(i);
+
+                            Episode episode = new Episode();
+                            episode.setId(episodeJson.optInt("id", 0));
+                            episode.setName(episodeJson.optString("name", "Episode " + (i + 1)));
+                            episode.setOverview(episodeJson.optString("overview", "No description available"));
+                            episode.setEpisodeNumber(episodeJson.optInt("episode_number", i + 1));
+                            episode.setSeasonNumber(seasonNumber);
+                            episode.setAirDate(episodeJson.optString("air_date", ""));
+                            episode.setVoteAverage(episodeJson.optDouble("vote_average", 0.0));
+                            episode.setRuntime(episodeJson.optInt("runtime", 0));
+
+                            String stillPath = episodeJson.optString("still_path", "");
+                            if (!stillPath.isEmpty()) {
+                                episode.setStillPath(IMAGE_BASE_URL + BACKDROP_SIZE + stillPath);
+                            }
+
+                            episodes.add(episode);
+                        }
+                    }
+
+                    mainHandler.post(() -> callback.onSuccess(episodes));
+
+                } else {
+                    throw new IOException("Failed with status: " + response.statusCode());
+                }
+
+            } catch (Exception e) {
+                Log.e(TAG, "Error fetching season episodes", e);
+                mainHandler.post(() -> callback.onError(e.getMessage()));
+            }
+        });
+    }
+
+    /**
+     * Get episode details (for playing specific episode)
+     */
+    public void getEpisodeDetails(String tmdbId, int seasonNumber, int episodeNumber,
+                                  TMDBCallback callback) {
+        executorService.execute(() -> {
+            try {
+                String url = TMDB_BASE_URL + "/tv/" + tmdbId + "/season/" + seasonNumber +
+                        "/episode/" + episodeNumber + "?language=en-US";
+
+                Connection.Response response = Jsoup.connect(url)
+                        .header("accept", "application/json")
+                        .header("Authorization", "Bearer " + BEARER_TOKEN)
+                        .ignoreContentType(true)
+                        .timeout(TIMEOUT_MS)
+                        .method(Connection.Method.GET)
+                        .execute();
+
+                if (response.statusCode() == 200) {
+                    JSONObject jsonResponse = new JSONObject(response.body());
+
+                    // Create MediaItems for this episode
+                    MediaItems episodeItem = new MediaItems();
+                    episodeItem.setId(String.valueOf(jsonResponse.optInt("id", 0)));
+                    episodeItem.setTitle(jsonResponse.optString("name", ""));
+                    episodeItem.setDescription(jsonResponse.optString("overview", ""));
+                    episodeItem.setSeason(String.valueOf(seasonNumber));
+                    episodeItem.setEpisode(String.valueOf(episodeNumber));
+                    episodeItem.setTmdbId(tmdbId);
+                    episodeItem.setMediaType("tv");
+                    episodeItem.setFromTMDB(true);
+
+                    String stillPath = jsonResponse.optString("still_path", "");
+                    if (!stillPath.isEmpty()) {
+                        episodeItem.setPosterUrl(IMAGE_BASE_URL + BACKDROP_SIZE + stillPath);
+                    }
+
+                    List<MediaItems> result = new ArrayList<>();
+                    result.add(episodeItem);
+
+                    mainHandler.post(() -> callback.onSuccess(result));
+
+                } else {
+                    throw new IOException("Failed with status: " + response.statusCode());
+                }
+
+            } catch (Exception e) {
+                Log.e(TAG, "Error fetching episode details", e);
                 mainHandler.post(() -> callback.onError(e.getMessage()));
             }
         });

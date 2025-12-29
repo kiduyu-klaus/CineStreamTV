@@ -30,6 +30,7 @@ import com.cinestream.tvplayer.data.repository.MediaRepositoryVideasy;
 import com.cinestream.tvplayer.ui.adapter.CategoryAdapter;
 import com.cinestream.tvplayer.ui.adapter.VerticalSpaceItemDecoration;
 import com.cinestream.tvplayer.ui.details.DetailsActivity;
+import com.cinestream.tvplayer.ui.details.DetailsActivityTv;
 import com.cinestream.tvplayer.ui.player.PlayerActivity;
 import com.cinestream.tvplayer.ui.search.SearchActivity;
 import com.cinestream.tvplayer.ui.settings.SettingsActivity;
@@ -346,9 +347,13 @@ public class NetflixMainActivity extends AppCompatActivity {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_DPAD_LEFT:
-                if (categoriesRecyclerView.hasFocus()) {
-                    homeIcon.requestFocus();
+                if (!categories.isEmpty()) {
+
+                    categoriesRecyclerView.requestFocus();
                     return true;
+                }
+                else if (categories.isEmpty()){
+                    homeIcon.requestFocus();
                 }
                 break;
             case KeyEvent.KEYCODE_DPAD_RIGHT:
@@ -569,7 +574,12 @@ public class NetflixMainActivity extends AppCompatActivity {
             public void onItemClick(MediaItems mediaItems, int categoryPosition, int itemPosition) {
                 currentSelectedItem = mediaItems;
                 updateHeroContent(mediaItems, categoryPosition);
-                launchDetails(currentSelectedItem);
+                if (mediaItems.getMediaType().toLowerCase().equals("movie")){
+                    launchDetails(currentSelectedItem);
+                } else {
+                    launchTvDetails(currentSelectedItem);
+                }
+                //launchDetails(currentSelectedItem);
             }
 
             @Override
@@ -616,7 +626,12 @@ public class NetflixMainActivity extends AppCompatActivity {
 
 
 
-
+    // When a TV show is clicked
+    private void launchTvDetails(MediaItems tvShow) {
+        Intent intent = new Intent(this, DetailsActivityTv.class);
+        intent.putExtra("media_item", tvShow);
+        startActivity(intent);
+    }
     private void launchDetails(MediaItems mediaItems) {
         Intent intent = new Intent(this, DetailsActivity.class);
         intent.putExtra("media_item", mediaItems);

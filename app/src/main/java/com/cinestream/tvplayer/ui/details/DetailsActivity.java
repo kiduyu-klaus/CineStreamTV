@@ -210,7 +210,7 @@ public class DetailsActivity extends AppCompatActivity {
         Log.d(TAG, "Fetching video sources for: " + title + " (" + year + ") [" + tmdbId + "]");
         Log.i(TAG, "fetchVideoSources: "+ title + " (" + year + ") [" + tmdbId + "]");
 
-        if ("TV".equals(mediaType)) {
+        if ("tv".equals(mediaType.toLowerCase())) {
             // For TV shows - you'll need season/episode data
             String season = mediaItems.getSeason() != null ? mediaItems.getSeason() : "1";
             String episode = mediaItems.getEpisode() != null ? mediaItems.getEpisode() : "1";

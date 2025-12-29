@@ -300,8 +300,8 @@ public class PlayerActivity extends AppCompatActivity {
 
         // Create MediaItem with subtitle configuration
         MediaItem.Builder mediaItemBuilder = new MediaItem.Builder()
-                .setUri(getMediaUri(sourceMediaItem))
-                .setMediaId(sourceMediaItem.getId());
+                .setUri(getMediaUri(sourceMediaItem));
+                //.setMediaId(sourceMediaItem.getId());
 
         // Add subtitles if available
         List<MediaItem.SubtitleConfiguration> subtitleList = new ArrayList<>();

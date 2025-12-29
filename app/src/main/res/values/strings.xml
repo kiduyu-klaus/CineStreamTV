@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">CineStream TV</string>
-    
+
     <!-- Main Activity -->
     <string name="main_welcome">Welcome to CineStream TV</string>
-    
+
     <!-- Player Activity -->
     <string name="player_loading">Loading…</string>
     <string name="player_play">Play</string>
@@ -13,7 +13,7 @@
     <string name="player_subtitles">Subtitles</string>
     <string name="player_quality">Quality</string>
     <string name="player_settings">Settings</string>
-    
+
     <!-- Dialogs -->
     <string name="dialog_quality_title">Select Quality</string>
     <string name="dialog_subtitle_title">Select Subtitles</string>
@@ -29,7 +29,7 @@
     <string name="dialog_quality_360p_desc">Low Definition (640x360)</string>
     <string name="dialog_quality_240p">240p</string>
     <string name="dialog_quality_240p_desc">Very Low Definition (426x240)</string>
-    
+
     <string name="dialog_subtitle_off">Off</string>
     <string name="dialog_subtitle_off_desc">No subtitles</string>
     <string name="dialog_subtitle_english">English</string>
@@ -50,12 +50,12 @@
     <string name="dialog_subtitle_korean_desc">Korean subtitles</string>
     <string name="dialog_subtitle_chinese">Chinese</string>
     <string name="dialog_subtitle_chinese_desc">Chinese subtitles</string>
-    
+
     <!-- Details Activity -->
     <string name="details_year">Year: %d</string>
     <string name="details_duration">Duration: %s</string>
     <string name="details_play_button">Play Movie</string>
-    
+
     <!-- Error Messages -->
     <string name="error_invalid_media">Invalid media item</string>
     <string name="error_unsupported_format">Unsupported media format</string>
@@ -64,12 +64,12 @@
     <string name="error_tmdb_api">Failed to fetch content from TMDB. Please check your internet connection.</string>
     <string name="error_streaming_sources">Streaming sources not available for this content</string>
     <string name="error_videasy_api">Failed to load video sources from streaming service</string>
-    
+
     <!-- Loading Messages -->
     <string name="loading_tmdb_content">Loading content from TMDB…</string>
     <string name="loading_streaming_sources">Fetching streaming sources…</string>
     <string name="loading_enhancing_content">Enhancing content with streaming sources…</string>
-    
+
     <!-- Content Categories -->
     <string name="category_featured">Featured Movies</string>
     <string name="category_action">Action &amp; Adventure</string>
@@ -78,11 +78,11 @@
     <string name="category_documentaries">Documentaries</string>
     <string name="category_format_demos">Format Demos</string>
     <string name="category_api_content">🎆 Live API Content</string>
-    
+
     <!-- TMDB Categories -->
     <string name="category_popular_movies">🎬 Popular Movies</string>
     <string name="category_popular_tv">📺 Popular TV Shows</string>
     <string name="category_top_rated_movies">⭐ Top Rated Movies</string>
     <string name="category_trending">🔥 Trending Now</string>
-    
+
 </resources>
