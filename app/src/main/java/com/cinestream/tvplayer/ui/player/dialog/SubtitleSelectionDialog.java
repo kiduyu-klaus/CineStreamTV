@@ -100,19 +100,8 @@ public class SubtitleSelectionDialog extends DialogFragment {
         // Add "Off" option first
         subtitleItems.add(new SubtitleItem("Off", "off", "No subtitles"));
 
-        // Add subtitles from media item if available
-        if (mediaSubtitles != null && !mediaSubtitles.isEmpty()) {
-            for (MediaItems.SubtitleItem subtitle : mediaSubtitles) {
-                String displayName = formatSubtitleName(subtitle);
-                subtitleItems.add(new SubtitleItem(
-                        displayName,
-                        subtitle.getLang(),
-                        subtitle.getLanguage()
-                ));
-            }
-        }
-
         // Load available subtitle tracks from player
+        // This will include both embedded tracks and those added via SubtitleConfiguration
         if (player != null) {
             loadAvailableSubtitlesFromPlayer();
         }

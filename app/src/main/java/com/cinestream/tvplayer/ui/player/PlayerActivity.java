@@ -324,22 +324,12 @@ public class PlayerActivity extends AppCompatActivity {
             return;
         }
 
-        // Determine media source based on URL type
-        MediaSource mediaSource = createMediaSource(sourceMediaItem);
-        if (mediaSource == null) {
-            Toast.makeText(this, "Unsupported media format", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
-
-
         MediaItem.Builder mediaItemBuilder = new MediaItem.Builder();
 
         if (sourceMediaItem.getId()!=null) {
             // Create MediaItem with subtitle configuration
             mediaItemBuilder.setUri(getMediaUri(sourceMediaItem))
                     .setMediaId(sourceMediaItem.getId());
-            // }
         }
         else{
             mediaItemBuilder
@@ -374,6 +364,14 @@ public class PlayerActivity extends AppCompatActivity {
 
         currentMediaItem = mediaItemBuilder.build();
 
+        // Determine media source based on MediaItem
+        MediaSource mediaSource = createMediaSourceFromMediaItem(currentMediaItem);
+        if (mediaSource == null) {
+            Toast.makeText(this, "Unsupported media format", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
         // Set media source and prepare player
         player.setMediaSource(mediaSource);
         player.prepare();
@@ -383,41 +381,7 @@ public class PlayerActivity extends AppCompatActivity {
         player.setPlaybackSpeed(currentSpeed);
     }
 
-    private MediaSource createMediaSource(MediaItems mediaItem) {
-        DefaultDataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(this);
 
-        Uri uri = getMediaUri(mediaItem);
-        Log.i("PlayerActivity", "createMediaSource: " + uri);
-        String uriString = uri.toString().toLowerCase();
-
-        if (uriString.contains(".m3u8") || uriString.contains("m3u8")) {
-            return new HlsMediaSource.Factory(dataSourceFactory)
-                    .createMediaSource(MediaItem.fromUri(uri));
-        } else if (uriString.contains(".mpd") || uriString.contains("mpd")) {
-            return new DashMediaSource.Factory(dataSourceFactory)
-                    .createMediaSource(MediaItem.fromUri(uri));
-        } else {
-            return new ProgressiveMediaSource.Factory(dataSourceFactory)
-                    .createMediaSource(MediaItem.fromUri(uri));
-        }
-    }
-
-    private MediaSource createMediaSourceFromUrl(String url) {
-        DefaultDataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(this);
-        Uri uri = Uri.parse(url);
-        String uriString = url.toLowerCase();
-
-        if (uriString.contains(".m3u8") || uriString.contains("m3u8")) {
-            return new HlsMediaSource.Factory(dataSourceFactory)
-                    .createMediaSource(MediaItem.fromUri(uri));
-        } else if (uriString.contains(".mpd") || uriString.contains("mpd")) {
-            return new DashMediaSource.Factory(dataSourceFactory)
-                    .createMediaSource(MediaItem.fromUri(uri));
-        } else {
-            return new ProgressiveMediaSource.Factory(dataSourceFactory)
-                    .createMediaSource(MediaItem.fromUri(uri));
-        }
-    }
 
     private Uri getMediaUri(MediaItems mediaItem) {
         String bestUrl = mediaItem.getBestVideoUrl();
@@ -549,8 +513,29 @@ public class PlayerActivity extends AppCompatActivity {
         try {
             android.util.Log.d("PlayerActivity", "Switching to URL: " + newUrl);
 
-            // Create new media source
-            MediaSource newMediaSource = createMediaSourceFromUrl(newUrl);
+            // Create MediaItem with subtitles
+            MediaItem.Builder mediaItemBuilder = new MediaItem.Builder()
+                    .setUri(Uri.parse(newUrl));
+
+            // Add subtitles if available in sourceMediaItem
+            if (sourceMediaItem.getSubtitles() != null && !sourceMediaItem.getSubtitles().isEmpty()) {
+                List<MediaItem.SubtitleConfiguration> subtitleList = new ArrayList<>();
+                for (MediaItems.SubtitleItem subtitleItem : sourceMediaItem.getSubtitles()) {
+                    MediaItem.SubtitleConfiguration subtitle = new MediaItem.SubtitleConfiguration.Builder(
+                            Uri.parse(subtitleItem.getUrl()))
+                            .setMimeType(MimeTypes.TEXT_VTT)
+                            .setLanguage(subtitleItem.getLang())
+                            .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
+                            .build();
+                    subtitleList.add(subtitle);
+                }
+                mediaItemBuilder.setSubtitleConfigurations(subtitleList);
+            }
+
+            MediaItem mediaItem = mediaItemBuilder.build();
+            
+            // Create media source from the MediaItem
+            MediaSource newMediaSource = createMediaSourceFromMediaItem(mediaItem);
 
             if (newMediaSource == null) {
                 loadingProgressBar.setVisibility(View.GONE);
@@ -568,12 +553,26 @@ public class PlayerActivity extends AppCompatActivity {
             currentQuality = quality;
             updateQualityButton();
 
-            // Hide loading indicator will be handled by player state listener
-
         } catch (Exception e) {
             android.util.Log.e("PlayerActivity", "Error switching source", e);
             loadingProgressBar.setVisibility(View.GONE);
             Toast.makeText(this, "Failed to switch source: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private MediaSource createMediaSourceFromMediaItem(MediaItem mediaItem) {
+        DefaultDataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(this);
+        String uriString = mediaItem.localConfiguration.uri.toString().toLowerCase();
+
+        if (uriString.contains(".m3u8") || uriString.contains("m3u8")) {
+            return new HlsMediaSource.Factory(dataSourceFactory)
+                    .createMediaSource(mediaItem);
+        } else if (uriString.contains(".mpd") || uriString.contains("mpd")) {
+            return new DashMediaSource.Factory(dataSourceFactory)
+                    .createMediaSource(mediaItem);
+        } else {
+            return new ProgressiveMediaSource.Factory(dataSourceFactory)
+                    .createMediaSource(mediaItem);
         }
     }
 
