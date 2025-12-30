@@ -254,6 +254,16 @@ public class SubtitleSelectionDialog extends DialogFragment {
                 radioButton.setImageResource(R.drawable.radio_button_unselected);
             }
 
+            convertView.setFocusable(true);
+            convertView.setFocusableInTouchMode(true);
+            convertView.setOnFocusChangeListener((v, hasFocus) -> {
+                if (hasFocus) {
+                    v.animate().scaleX(1.05f).scaleY(1.05f).setDuration(200).start();
+                } else {
+                    v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start();
+                }
+            });
+
             return convertView;
         }
     }

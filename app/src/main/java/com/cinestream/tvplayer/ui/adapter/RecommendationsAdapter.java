@@ -94,6 +94,18 @@ public class RecommendationsAdapter extends RecyclerView.Adapter<Recommendations
                     listener.onItemClick(item);
                 }
             });
+
+            itemView.setFocusable(true);
+            itemView.setFocusableInTouchMode(true);
+            itemView.setOnFocusChangeListener((v, hasFocus) -> {
+                if (hasFocus) {
+                    v.animate().scaleX(1.1f).scaleY(1.1f).setDuration(200).start();
+                    v.setBackgroundResource(R.drawable.generic_focus_selector);
+                } else {
+                    v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start();
+                    v.setBackground(null);
+                }
+            });
         }
     }
 }

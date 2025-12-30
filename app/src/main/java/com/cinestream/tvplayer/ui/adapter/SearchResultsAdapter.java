@@ -81,6 +81,18 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
                     clickListener.onItemClick(results.get(getAdapterPosition()), getAdapterPosition());
                 }
             });
+
+            itemView.setFocusable(true);
+            itemView.setFocusableInTouchMode(true);
+            itemView.setOnFocusChangeListener((v, hasFocus) -> {
+                if (hasFocus) {
+                    v.animate().scaleX(1.05f).scaleY(1.05f).setDuration(200).start();
+                    v.setBackgroundResource(R.drawable.generic_focus_selector);
+                } else {
+                    v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start();
+                    v.setBackground(null);
+                }
+            });
         }
         
         public void bind(MediaItems item, int position) {

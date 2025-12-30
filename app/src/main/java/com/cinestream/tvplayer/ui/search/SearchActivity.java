@@ -111,6 +111,27 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
+        View.OnFocusChangeListener focusChangeListener = (v, hasFocus) -> {
+            if (hasFocus) {
+                v.animate().scaleX(1.05f).scaleY(1.05f).setDuration(200).start();
+                if (!(v instanceof EditText)) {
+                    v.setBackgroundResource(R.drawable.generic_focus_selector);
+                }
+            } else {
+                v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start();
+                if (!(v instanceof EditText)) {
+                    v.setBackground(null);
+                }
+            }
+        };
+
+        searchEditText.setOnFocusChangeListener(focusChangeListener);
+        voiceSearchButton.setOnFocusChangeListener(focusChangeListener);
+        clearSearchButton.setOnFocusChangeListener(focusChangeListener);
+        filterAllButton.setOnFocusChangeListener(focusChangeListener);
+        filterMoviesButton.setOnFocusChangeListener(focusChangeListener);
+        filterTVButton.setOnFocusChangeListener(focusChangeListener);
+
         // Search text watcher with debounce
         searchEditText.addTextChangedListener(new TextWatcher() {
             @Override

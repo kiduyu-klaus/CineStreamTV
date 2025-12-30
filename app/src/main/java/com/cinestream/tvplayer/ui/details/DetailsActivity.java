@@ -187,17 +187,26 @@ public class DetailsActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
+        View.OnFocusChangeListener focusChangeListener = (v, hasFocus) -> {
+            if (hasFocus) {
+                v.animate().scaleX(1.1f).scaleY(1.1f).setDuration(200).start();
+            } else {
+                v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start();
+            }
+        };
+
         playButton.setOnClickListener(v -> {
             // Check if we need to fetch video sources
             fetchVideoSources();
-
         });
+        playButton.setOnFocusChangeListener(focusChangeListener);
 
         favoriteButton.setOnClickListener(v -> {
             Toast.makeText(DetailsActivity.this,
                     "Added to favorites",
                     Toast.LENGTH_SHORT).show();
         });
+        favoriteButton.setOnFocusChangeListener(focusChangeListener);
     }
 
     private void fetchVideoSources() {

@@ -140,6 +140,15 @@ public class DetailsActivityTv extends AppCompatActivity {
         favoriteButton.setOnClickListener(v -> {
             Toast.makeText(this, "Added to favorites", Toast.LENGTH_SHORT).show();
         });
+
+        View.OnFocusChangeListener focusChangeListener = (v, hasFocus) -> {
+            if (hasFocus) {
+                v.animate().scaleX(1.1f).scaleY(1.1f).setDuration(200).start();
+            } else {
+                v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(200).start();
+            }
+        };
+        favoriteButton.setOnFocusChangeListener(focusChangeListener);
     }
 
     private void setupRecyclerViews() {
